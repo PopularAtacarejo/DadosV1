@@ -1059,6 +1059,43 @@
         </div>
     </div>
 
+    <!-- Modal para Líder e seu Setor -->
+    <div id="modal-lider-setor" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-lider-setor-titulo">Líder e Funcionários do Setor</h3>
+                <button class="close-modal" id="close-modal-lider-setor">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div style="margin-bottom: 20px; padding: 15px; background-color: var(--light-color); border-radius: var(--radius);">
+                    <h4 style="color: var(--primary-color); margin-bottom: 10px;" id="lider-info-title">Informações do Líder</h4>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div><strong>Nome:</strong> <span id="lider-nome">-</span></div>
+                        <div><strong>Setor Responsável:</strong> <span id="lider-setor">-</span></div>
+                        <div><strong>Função:</strong> <span id="lider-funcao">-</span></div>
+                        <div><strong>Empresa:</strong> <span id="lider-empresa">-</span></div>
+                    </div>
+                </div>
+                <h4 style="color: var(--primary-color); margin-bottom: 15px;">Funcionários do Setor</h4>
+                <div class="table-container">
+                    <table class="modal-table">
+                        <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th>CPF</th>
+                                <th>Função</th>
+                                <th>Data Admissão</th>
+                            </tr>
+                        </thead>
+                        <tbody id="modal-lider-setor-body">
+                            <!-- Dados serão preenchidos via JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // ===================================================================
         // 🔑 CONFIGURAÇÃO SUPABASE (Credenciais Fornecidas)
@@ -1087,12 +1124,14 @@
         const modalMaes = document.getElementById('modal-maes');
         const modalSetor = document.getElementById('modal-setor');
         const modalFardamento = document.getElementById('modal-fardamento');
+        const modalLiderSetor = document.getElementById('modal-lider-setor');
         
         // Botões para fechar modais
         const closeModalPais = document.getElementById('close-modal-pais');
         const closeModalMaes = document.getElementById('close-modal-maes');
         const closeModalSetor = document.getElementById('close-modal-setor');
         const closeModalFardamento = document.getElementById('close-modal-fardamento');
+        const closeModalLiderSetor = document.getElementById('close-modal-lider-setor');
         
         // Elementos para gráficos
         const btnChartBar = document.getElementById('btn-chart-bar');
@@ -1880,6 +1919,12 @@
             
             lideres.forEach(funcionario => {
                 const tr = document.createElement('tr');
+                tr.className = 'clickable-row';
+                tr.setAttribute('data-lider-id', funcionario.id);
+                tr.setAttribute('data-lider-nome', funcionario.nome || '');
+                tr.setAttribute('data-lider-setor', funcionario.setor || '');
+                tr.setAttribute('data-lider-funcao', funcionario.funcao || '');
+                tr.setAttribute('data-lider-empresa', funcionario.empresa || '');
                 tr.innerHTML = `
                     <td>${funcionario.nome || 'N/A'}</td>
                     <td>${funcionario.setor || 'N/A'}</td>
@@ -1912,6 +1957,7 @@
             closeModalMaes.addEventListener('click', () => fecharModal('modal-maes'));
             closeModalSetor.addEventListener('click', () => fecharModal('modal-setor'));
             closeModalFardamento.addEventListener('click', () => fecharModal('modal-fardamento'));
+            closeModalLiderSetor.addEventListener('click', () => fecharModal('modal-lider-setor'));
             
             // Eventos para mudar tipo de gráfico
             chartTypeButtons.forEach(btn => {
@@ -1945,6 +1991,52 @@
                     mostrarFuncionariosPorSetor(setor);
                 }
             });
+            
+            // Evento para linhas clicáveis da tabela de líderes
+            document.querySelector('#lideres-container tbody').addEventListener('click', (event) => {
+                const row = event.target.closest('tr.clickable-row');
+                if (row) {
+                    const liderNome = row.getAttribute('data-lider-nome');
+                    const liderSetor = row.getAttribute('data-lider-setor');
+                    const liderFuncao = row.getAttribute('data-lider-funcao');
+                    const liderEmpresa = row.getAttribute('data-lider-empresa');
+                    
+                    mostrarLiderESetor(liderNome, liderSetor, liderFuncao, liderEmpresa);
+                }
+            });
+        }
+
+        // Função para mostrar líder e seu setor no modal
+        function mostrarLiderESetor(liderNome, liderSetor, liderFuncao, liderEmpresa) {
+            // Atualizar informações do líder no modal
+            document.getElementById('lider-nome').textContent = liderNome;
+            document.getElementById('lider-setor').textContent = liderSetor;
+            document.getElementById('lider-funcao').textContent = liderFuncao;
+            document.getElementById('lider-empresa').textContent = liderEmpresa;
+            document.getElementById('modal-lider-setor-titulo').textContent = `Líder: ${liderNome} - Setor: ${liderSetor}`;
+            
+            // Buscar funcionários do mesmo setor
+            const funcionariosDoSetor = funcionarios.filter(f => f.setor === liderSetor);
+            
+            const tbody = document.getElementById('modal-lider-setor-body');
+            tbody.innerHTML = '';
+            
+            funcionariosDoSetor.forEach(funcionario => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${funcionario.nome || 'N/A'}</td>
+                    <td>${formatarCPF(funcionario.cpf) || 'N/A'}</td>
+                    <td>${funcionario.funcao || 'N/A'}</td>
+                    <td>${formatarDataParaExibicao(funcionario.data_admissao) || 'N/A'}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+            
+            if (funcionariosDoSetor.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">Nenhum funcionário encontrado neste setor</td></tr>';
+            }
+            
+            abrirModal('modal-lider-setor');
         }
 
         // Função para mostrar funcionários pais no modal
@@ -2114,6 +2206,13 @@
                 console.error('Erro ao parsear data:', dataString, error);
                 return null;
             }
+        }
+
+        function formatarDataParaExibicao(dataString) {
+            const data = parsearData(dataString);
+            if (!data) return 'N/A';
+            
+            return data.toLocaleDateString('pt-BR');
         }
 
         function showAlert(message, type) {
