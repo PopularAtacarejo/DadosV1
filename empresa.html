@@ -1,0 +1,1797 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Cadastro - Empresas</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --primary-color: #5d78ff;
+            --secondary-color: #8a9bff;
+            --accent-color: #ff6b8b;
+            --success-color: #4caf50;
+            --warning-color: #ff9800;
+            --error-color: #f44336;
+            --light-color: #f8f9ff;
+            --dark-color: #2d3748;
+            --gray-light: #f1f3f9;
+            --gray-medium: #e2e8f0;
+            --text-light: #718096;
+            --text-dark: #2d3748;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+            --radius: 12px;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7ff 0%, #e6eeff 100%);
+            color: var(--text-dark);
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+        }
+
+        /* Menu Lateral */
+        .sidebar {
+            width: 280px;
+            background: white;
+            box-shadow: var(--shadow);
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            overflow-y: auto;
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--gray-medium);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sidebar-header h1 {
+            font-size: 1.3rem;
+            color: var(--primary-color);
+        }
+
+        .user-profile {
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            border-bottom: 1px solid var(--gray-medium);
+        }
+
+        .user-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .user-avatar img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .user-info {
+            flex: 1;
+        }
+
+        .user-name {
+            font-weight: 600;
+            font-size: 16px;
+            color: var(--text-dark);
+        }
+
+        .user-role {
+            font-size: 14px;
+            color: var(--text-light);
+        }
+
+        .sidebar-menu {
+            padding: 15px 0;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 20px;
+            color: var(--text-dark);
+            text-decoration: none;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .menu-item:hover {
+            background-color: var(--light-color);
+            color: var(--primary-color);
+        }
+
+        .menu-item.active {
+            background-color: var(--light-color);
+            color: var(--primary-color);
+            border-right: 3px solid var(--primary-color);
+        }
+
+        .menu-item i {
+            width: 20px;
+            text-align: center;
+        }
+
+        .menu-divider {
+            height: 1px;
+            background-color: var(--gray-medium);
+            margin: 10px 20px;
+        }
+
+        /* Conteúdo Principal */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            transition: all 0.3s;
+        }
+
+        .top-header {
+            background: white;
+            border-radius: 0 0 var(--radius) var(--radius);
+            padding: 15px 25px;
+            box-shadow: var(--shadow);
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .page-title {
+            font-size: 1.5rem;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--primary-color);
+            cursor: pointer;
+        }
+        
+        /* Restante do CSS */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .form-container {
+            background-color: white;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        
+        .form-section {
+            background-color: white;
+            border-radius: var(--radius);
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+            border-left: 4px solid var(--primary-color);
+        }
+        
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            color: var(--primary-color);
+            font-size: 1.1rem;
+        }
+        
+        .section-title i {
+            background-color: var(--light-color);
+            border-radius: 8px;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+            position: relative;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            color: var(--text-dark);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+        }
+        
+        .input-with-icon {
+            position: relative;
+        }
+        
+        .input-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+        
+        input:not([type="file"]):not([type="checkbox"]), select, textarea {
+            width: 100%;
+            padding: 12px 12px 12px 40px;
+            border: 1px solid var(--gray-medium);
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s;
+            background-color: var(--light-color);
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--primary-color);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(93, 120, 255, 0.2);
+            background-color: white;
+        }
+        
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(93, 120, 255, 0.3);
+        }
+        
+        .btn-success {
+            background-color: var(--success-color);
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background-color: #3d8b40;
+        }
+        
+        .btn-danger {
+            background-color: var(--error-color);
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background-color: #d32f2f;
+        }
+        
+        .btn-warning {
+            background-color: var(--warning-color);
+            color: white;
+        }
+        
+        .btn-warning:hover {
+            background-color: #f57c00;
+        }
+        
+        .btn-sm {
+            padding: 8px 12px;
+            font-size: 12px;
+        }
+        
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 25px;
+            flex-wrap: wrap;
+        }
+        
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+        }
+
+        .card {
+            background: white;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
+            overflow: hidden;
+            border-left: 4px solid var(--primary-color);
+        }
+        
+        .card-header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            padding: 15px 20px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .card-body {
+            padding: 20px;
+        }
+
+        .connection-status {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+        
+        .connected {
+            background-color: var(--success-color);
+        }
+        
+        .disconnected {
+            background-color: var(--error-color);
+        }
+
+        .alert {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            display: none;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+        }
+        
+        .alert-error {
+            background-color: #fff5f5;
+            color: var(--error-color);
+            border: 1px solid #fed7d7;
+        }
+        
+        .alert-success {
+            background-color: #f0fff4;
+            color: var(--success-color);
+            border: 1px solid #c6f6d5;
+        }
+        
+        .alert-info {
+            background-color: #e6f3ff;
+            color: var(--primary-color);
+            border: 1px solid #b3d9ff;
+        }
+
+        footer {
+            background-color: var(--dark-color);
+            color: white;
+            text-align: center;
+            padding: 20px 0;
+            margin-top: 40px;
+            border-radius: var(--radius) var(--radius) 0 0;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-light);
+        }
+        
+        .loading i {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        /* Preview Section */
+        .preview-section {
+            background: white;
+            border-radius: var(--radius);
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+            border-left: 4px solid var(--accent-color);
+        }
+
+        .preview-card {
+            background: var(--light-color);
+            border-radius: var(--radius);
+            padding: 20px;
+            margin-top: 15px;
+            border: 1px solid var(--gray-medium);
+        }
+
+        .preview-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--gray-medium);
+        }
+
+        .preview-photo {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid var(--primary-color);
+        }
+
+        .preview-name {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 5px;
+        }
+
+        .preview-position {
+            font-size: 1rem;
+            color: var(--text-dark);
+        }
+
+        .preview-section-title {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin: 15px 0 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid var(--gray-light);
+        }
+
+        .preview-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .preview-item {
+            margin-bottom: 8px;
+        }
+
+        .preview-label {
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-right: 8px;
+            display: inline-block;
+            min-width: 140px;
+        }
+
+        .preview-value {
+            color: var(--text-dark);
+        }
+
+        /* Badges de Status */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .status-badge.primary {
+            background: rgba(93, 120, 255, 0.1);
+            color: var(--primary-color);
+        }
+
+        .status-badge.success {
+            background: rgba(76, 175, 80, 0.1);
+            color: var(--success-color);
+        }
+
+        .status-badge.warning {
+            background: rgba(255, 152, 0, 0.1);
+            color: var(--warning-color);
+        }
+
+        @media (max-width: 992px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .menu-toggle {
+                display: block;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .grid-2, .grid-3 {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-actions {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+            }
+
+            .preview-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .preview-header {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Menu Lateral -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <i class="fas fa-chart-bar"></i>
+            <h1>Sistema de RH</h1>
+        </div>
+        
+        <!-- Perfil do Usuário -->
+        <div class="user-profile">
+            <div class="user-avatar" id="user-avatar">
+                <!-- Avatar será preenchido via JavaScript -->
+            </div>
+            <div class="user-info">
+                <div class="user-name" id="user-name">Carregando...</div>
+                <div class="user-role" id="user-role">Usuário</div>
+            </div>
+        </div>
+        
+        <!-- Menu de Navegação -->
+        <div class="sidebar-menu">
+            <a href="dashboard.html" class="menu-item">
+                <i class="fas fa-chart-bar"></i>
+                Dashboard
+            </a>
+            <a href="busca.html" class="menu-item">
+                <i class="fas fa-search"></i>
+                Busca
+            </a>
+            <a href="cadastro.html" class="menu-item">
+                <i class="fas fa-user-plus"></i>
+                Cadastro
+            </a>
+            <a href="empresa.html" class="menu-item active">
+                <i class="fas fa-building"></i>
+                Empresa
+            </a>
+            <a href="funcionarios.html" class="menu-item">
+                <i class="fas fa-users"></i>
+                Funcionários
+            </a>
+            <a href="funcoes.html" class="menu-item">
+                <i class="fas fa-briefcase"></i>
+                Funções
+            </a>
+            <a href="lideres.html" class="menu-item">
+                <i class="fas fa-crown"></i>
+                Líderes
+            </a>
+            <a href="listaempresas.html" class="menu-item">
+                <i class="fas fa-list"></i>
+                Lista de Empresas
+            </a>
+            <a href="setores.html" class="menu-item">
+                <i class="fas fa-sitemap"></i>
+                Setores
+            </a>
+            
+            <div class="menu-divider"></div>
+            
+            <a href="#" class="menu-item" id="logout-btn">
+                <i class="fas fa-sign-out-alt"></i>
+                Sair
+            </a>
+        </div>
+    </div>
+
+    <!-- Conteúdo Principal -->
+    <div class="main-content" id="main-content">
+        <!-- Top Header -->
+        <div class="top-header">
+            <div class="page-title">
+                <i class="fas fa-building"></i>
+                Cadastro de Empresas
+            </div>
+            <div class="header-actions">
+                <button class="menu-toggle" id="menu-toggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="container">
+            <div id="global-alert"></div>
+            
+            <div class="form-container">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 style="color: white; margin: 0;">Cadastro de Empresas</h2>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span class="connection-status" id="db-status"></span>
+                            <span id="connection-text" style="color: white;">Conectando...</span>
+                            <button class="btn btn-primary" id="refresh-btn">
+                                <i class="fas fa-sync-alt"></i>
+                                Atualizar
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <!-- Formulário de Cadastro -->
+                        <div id="form-tab">
+                            <form id="empresaForm">
+                                <div class="form-section">
+                                    <div class="section-title">
+                                        <i class="fas fa-id-card"></i>
+                                        <h3>Dados da Empresa</h3>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="cnpj">
+                                            <i class="fas fa-address-card"></i>
+                                            CNPJ *
+                                        </label>
+                                        <div class="input-with-icon" style="position: relative;">
+                                            <i class="fas fa-search input-icon"></i>
+                                            <input type="text" id="cnpj" placeholder="00.000.000/0000-00" required>
+                                            <button type="button" id="consultar-cnpj" class="btn btn-primary" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); padding: 5px 10px; font-size: 12px; height: 30px;">
+                                                <i class="fas fa-search"></i>
+                                                Consultar
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="grid-2">
+                                        <div class="form-group">
+                                            <label for="nome_fantasia">
+                                                <i class="fas fa-signature"></i>
+                                                Nome Fantasia *
+                                            </label>
+                                            <div class="input-with-icon">
+                                                <i class="fas fa-building input-icon"></i>
+                                                <input type="text" id="nome_fantasia" placeholder="Nome Fantasia da Empresa" required>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="razao_social">
+                                                <i class="fas fa-file-signature"></i>
+                                                Razão Social *
+                                            </label>
+                                            <div class="input-with-icon">
+                                                <i class="fas fa-file-contract input-icon"></i>
+                                                <input type="text" id="razao_social" placeholder="Razão Social da Empresa" required>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="grid-3">
+                                        <div class="form-group">
+                                            <label for="data_abertura">
+                                                <i class="fas fa-calendar"></i>
+                                                Data de Abertura
+                                            </label>
+                                            <div class="input-with-icon">
+                                                <i class="fas fa-calendar-day input-icon"></i>
+                                                <input type="text" id="data_abertura" placeholder="DD/MM/AAAA">
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="situacao">
+                                                <i class="fas fa-info-circle"></i>
+                                                Situação
+                                            </label>
+                                            <div class="input-with-icon">
+                                                <i class="fas fa-check-circle input-icon"></i>
+                                                <input type="text" id="situacao" placeholder="Situação da Empresa">
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="data_situacao">
+                                                <i class="fas fa-calendar-check"></i>
+                                                Data da Situação
+                                            </label>
+                                            <div class="input-with-icon">
+                                                <i class="fas fa-calendar-alt input-icon"></i>
+                                                <input type="text" id="data_situacao" placeholder="DD/MM/AAAA">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="grid-3">
+                                        <div class="form-group">
+                                            <label for="natureza_juridica">
+                                                <i class="fas fa-balance-scale"></i>
+                                                Natureza Jurídica
+                                            </label>
+                                            <div class="input-with-icon">
+                                                <i class="fas fa-gavel input-icon"></i>
+                                                <input type="text" id="natureza_juridica" placeholder="Natureza Jurídica">
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="capital_social">
+                                                <i class="fas fa-money-bill-wave"></i>
+                                                Capital Social
+                                            </label>
+                                            <div class="input-with-icon">
+                                                <i class="fas fa-dollar-sign input-icon"></i>
+                                                <input type="text" id="capital_social" placeholder="R$ 0,00">
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="porte">
+                                                <i class="fas fa-chart-bar"></i>
+                                                Porte
+                                            </label>
+                                            <div class="input-with-icon">
+                                                <i class="fas fa-building input-icon"></i>
+                                                <input type="text" id="porte" placeholder="Porte da Empresa">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="grid-2">
+                                        <div class="form-group">
+                                            <label for="simples">
+                                                <i class="fas fa-file-invoice-dollar"></i>
+                                                Optante do Simples Nacional
+                                            </label>
+                                            <div class="input-with-icon">
+                                                <i class="fas fa-check input-icon"></i>
+                                                <select id="simples">
+                                                    <option value="">Selecione</option>
+                                                    <option value="Sim">Sim</option>
+                                                    <option value="Não">Não</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="mei">
+                                                <i class="fas fa-user-tie"></i>
+                                                Optante do MEI
+                                            </label>
+                                            <div class="input-with-icon">
+                                                <i class="fas fa-check input-icon"></i>
+                                                <select id="mei">
+                                                    <option value="">Selecione</option>
+                                                    <option value="Sim">Sim</option>
+                                                    <option value="Não">Não</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="tipo_empresa">
+                                            <i class="fas fa-sitemap"></i>
+                                            Tipo de Empresa
+                                        </label>
+                                        <div class="input-with-icon">
+                                            <i class="fas fa-project-diagram input-icon"></i>
+                                            <select id="tipo_empresa">
+                                                <option value="">Selecione</option>
+                                                <option value="Matriz">Matriz</option>
+                                                <option value="Filial">Filial</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-section">
+                                    <div class="section-title">
+                                        <i class="fas fa-map-marked-alt"></i>
+                                        <h3>Endereço</h3>
+                                    </div>
+                                    
+                                    <div class="grid-2">
+                                        <div class="form-group">
+                                            <label for="cep">
+                                                <i class="fas fa-map-pin"></i>
+                                                CEP
+                                            </label>
+                                            <div class="input-with-icon">
+                                                <i class="fas fa-search-location input-icon"></i>
+                                                <input type="text" id="cep" placeholder="00000-000">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="grid-2">
+                                        <div class="form-group">
+                                            <label for="logradouro">
+                                                <i class="fas fa-road"></i>
+                                                Logradouro
+                                            </label>
+                                            <div class="input-with-icon">
+                                                <i class="fas fa-map input-icon"></i>
+                                                <input type="text" id="logradouro" placeholder="Nome da Rua/Avenida">
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="numero">
+                                                <i class="fas fa-hashtag"></i>
+                                                Número
+                                            </label>
+                                            <div class="input-with-icon">
+                                                <i class="fas fa-home input-icon"></i>
+                                                <input type="text" id="numero" placeholder="Número">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="grid-3">
+                                        <div class="form-group">
+                                            <label for="bairro">
+                                                <i class="fas fa-map-marker"></i>
+                                                Bairro
+                                            </label>
+                                            <div class="input-with-icon">
+                                                <i class="fas fa-location-arrow input-icon"></i>
+                                                <input type="text" id="bairro" placeholder="Bairro">
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="cidade">
+                                                <i class="fas fa-city"></i>
+                                                Cidade
+                                            </label>
+                                            <div class="input-with-icon">
+                                                <i class="fas fa-building input-icon"></i>
+                                                <input type="text" id="cidade" placeholder="Cidade">
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="estado">
+                                                <i class="fas fa-flag"></i>
+                                                Estado
+                                            </label>
+                                            <div class="input-with-icon">
+                                                <i class="fas fa-map-signs input-icon"></i>
+                                                <input type="text" id="estado" placeholder="UF">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="complemento">
+                                            <i class="fas fa-plus-circle"></i>
+                                            Complemento
+                                        </label>
+                                        <div class="input-with-icon">
+                                            <i class="fas fa-home input-icon"></i>
+                                            <input type="text" id="complemento" placeholder="Complemento">
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-section">
+                                    <div class="section-title">
+                                        <i class="fas fa-phone-alt"></i>
+                                        <h3>Contato</h3>
+                                    </div>
+                                    
+                                    <div class="grid-2">
+                                        <div class="form-group">
+                                            <label for="telefone1">
+                                                <i class="fas fa-phone"></i>
+                                                Telefone 1
+                                            </label>
+                                            <div class="input-with-icon">
+                                                <i class="fas fa-phone-alt input-icon"></i>
+                                                <input type="text" id="telefone1" placeholder="(00) 00000-0000">
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="telefone2">
+                                                <i class="fas fa-phone"></i>
+                                                Telefone 2
+                                            </label>
+                                            <div class="input-with-icon">
+                                                <i class="fas fa-mobile-alt input-icon"></i>
+                                                <input type="text" id="telefone2" placeholder="(00) 00000-0000">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="email">
+                                            <i class="fas fa-envelope"></i>
+                                            E-mail
+                                        </label>
+                                        <div class="input-with-icon">
+                                            <i class="fas fa-at input-icon"></i>
+                                            <input type="email" id="email" placeholder="email@empresa.com.br">
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-section">
+                                    <div class="section-title">
+                                        <i class="fas fa-industry"></i>
+                                        <h3>Atividades Econômicas</h3>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="cnae_principal">
+                                            <i class="fas fa-star"></i>
+                                            CNAE Principal
+                                        </label>
+                                        <div class="input-with-icon">
+                                            <i class="fas fa-barcode input-icon"></i>
+                                            <input type="text" id="cnae_principal" placeholder="Código CNAE Principal">
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="descricao_cnae_principal">
+                                            <i class="fas fa-file-alt"></i>
+                                            Descrição CNAE Principal
+                                        </label>
+                                        <div class="input-with-icon">
+                                            <i class="fas fa-align-left input-icon"></i>
+                                            <textarea id="descricao_cnae_principal" rows="2" placeholder="Descrição da atividade principal"></textarea>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="cnaes_secundarios">
+                                            <i class="fas fa-list"></i>
+                                            CNAEs Secundários
+                                        </label>
+                                        <div class="input-with-icon">
+                                            <i class="fas fa-tasks input-icon"></i>
+                                            <textarea id="cnaes_secundarios" rows="4" placeholder="Códigos e descrições das atividades secundárias"></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Pré-visualização -->
+                                <div class="preview-section">
+                                    <div class="section-title">
+                                        <i class="fas fa-eye"></i>
+                                        <h3>Pré-visualização dos Dados</h3>
+                                    </div>
+                                    <div class="preview-card" id="preview-content">
+                                        <div style="text-align: center; color: var(--text-light); padding: 20px;">
+                                            <i class="fas fa-building" style="font-size: 48px; margin-bottom: 10px;"></i>
+                                            <p>Os dados aparecerão aqui conforme você preencher o formulário</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-actions">
+                                    <button type="button" class="btn btn-danger" id="limpar-campos">
+                                        <i class="fas fa-broom"></i>
+                                        Limpar Campos
+                                    </button>
+                                    <button type="button" class="btn btn-success" id="salvar-empresa">
+                                        <i class="fas fa-save"></i>
+                                        Salvar Empresa
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+       <footer>
+    <div class="container">
+        <p>
+            Sistema Desenvolvido por 
+            <a href="https://wa.me/5582999158412" 
+               target="_blank" 
+               style="color: white; text-decoration: underline; font-weight: bold;"
+               onmouseover="this.style.color='#5d78ff'" 
+               onmouseout="this.style.color='white'">
+                Jeferson
+            </a>
+        </p>
+        <p>Análise de dados de RH 2025 - Todos os direitos reservados</p>
+        <p style="font-size: 0.8rem; margin-top: 10px; opacity: 0.8;">
+            <i class="fas fa-mobile-alt"></i> WhatsApp: (82) 99915-8412
+        </p>
+    </div>
+</footer>
+    </div>
+
+    <script>
+        // CONFIGURAÇÃO DO BACKEND
+        const BACKEND_URL = 'https://sistemarhbk.onrender.com';
+        
+        // Configuração do Supabase
+        const SUPABASE_URL = "https://tmgglppfobyoosfiewoa.supabase.co";
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRtZ2dscHBmb2J5b29zZmlld29hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM3Mjg4NTEsImV4cCI6MjA3OTMwNDg1MX0.DH3IyjnE7zztySzyckKREy5Zlgmg2aJe4TEXIbmFmkA";
+        
+        // Inicializar Supabase
+        window.supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        
+        // Elementos DOM
+        const dbStatus = document.getElementById('db-status');
+        const connectionText = document.getElementById('connection-text');
+        const refreshBtn = document.getElementById('refresh-btn');
+        const menuToggle = document.getElementById('menu-toggle');
+        const sidebar = document.getElementById('sidebar');
+        const globalAlert = document.getElementById('global-alert');
+        const previewContent = document.getElementById('preview-content');
+        const logoutBtn = document.getElementById('logout-btn');
+        
+        // Variáveis globais
+        let currentUser = null;
+
+        // Menu mobile toggle
+        menuToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('active');
+        });
+
+        // Fechar menu ao clicar fora (em telas menores)
+        document.addEventListener('click', (e) => {
+            if (window.innerWidth <= 992 && !sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
+                sidebar.classList.remove('active');
+            }
+        });
+
+        // Inicializar a aplicação
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Verificar autenticação primeiro
+            currentUser = await checkAuth();
+            
+            // Se autenticado, inicializar o restante da aplicação
+            if (currentUser) {
+                await initializeApp();
+                setupEventListeners();
+                setupPreviewListeners();
+                setupMasks();
+                updatePreview(); // Inicializar a pré-visualização
+            }
+        });
+
+        // Função para verificar autenticação
+        async function checkAuth() {
+            try {
+                const { data: { session }, error } = await window.supabase.auth.getSession();
+                
+                if (error) {
+                    console.error('Erro ao verificar sessão:', error);
+                    redirectToLogin();
+                    return null;
+                }
+                
+                if (!session) {
+                    console.log('Nenhuma sessão ativa encontrada. Redirecionando para login...');
+                    redirectToLogin();
+                    return null;
+                }
+                
+                return session.user;
+            } catch (error) {
+                console.error('Erro na verificação de autenticação:', error);
+                redirectToLogin();
+                return null;
+            }
+        }
+
+        // Função para redirecionar para login
+        function redirectToLogin() {
+            const currentPath = window.location.pathname + window.location.search;
+            sessionStorage.setItem('redirectAfterLogin', currentPath);
+            window.location.href = 'index.html';
+        }
+
+        // Função para carregar perfil do usuário
+        async function loadUserProfile(userId) {
+            try {
+                const { data, error } = await window.supabase
+                    .from('profiles')
+                    .select('nome, funcao, avatar_url')
+                    .eq('id', userId)
+                    .single();
+                    
+                if (error) {
+                    console.error('Erro ao carregar perfil do usuário:', error);
+                    const userData = await window.supabase.auth.getUser();
+                    return {
+                        id: userId,
+                        email: userData.data.user?.email || 'Usuário',
+                        nome: userData.data.user?.email?.split('@')[0] || 'Usuário',
+                        funcao: 'Usuário',
+                        avatar: null
+                    };
+                } else {
+                    const userData = await window.supabase.auth.getUser();
+                    return {
+                        id: userId,
+                        email: userData.data.user?.email || 'Usuário',
+                        nome: data.nome || userData.data.user?.email?.split('@')[0] || 'Usuário',
+                        funcao: data.funcao || 'Usuário',
+                        avatar: data.avatar_url
+                    };
+                }
+            } catch (error) {
+                console.error('Erro ao carregar perfil:', error);
+                const userData = await window.supabase.auth.getUser();
+                return {
+                    id: userId,
+                    email: userData.data.user?.email || 'Usuário',
+                    nome: userData.data.user?.email?.split('@')[0] || 'Usuário',
+                    funcao: 'Usuário',
+                    avatar: null
+                };
+            }
+        }
+
+        // Função para atualizar perfil do usuário na interface
+        function updateUserProfile(userProfile) {
+            if (!userProfile) return;
+
+            const userName = document.getElementById('user-name');
+            const userRole = document.getElementById('user-role');
+            const userAvatar = document.getElementById('user-avatar');
+
+            if (userName) userName.textContent = userProfile.nome;
+            if (userRole) userRole.textContent = userProfile.funcao;
+            
+            if (userAvatar) {
+                const initials = userProfile.nome.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+                if (userProfile.avatar) {
+                    userAvatar.innerHTML = `<img src="${userProfile.avatar}" alt="${userProfile.nome}">`;
+                } else {
+                    userAvatar.innerHTML = initials;
+                }
+            }
+        }
+
+        // Função para fazer logout
+        async function logout() {
+            try {
+                const { error } = await window.supabase.auth.signOut();
+                if (error) {
+                    console.error('Erro ao fazer logout:', error);
+                    showAlert('Erro ao fazer logout. Tente novamente.', 'error');
+                } else {
+                    console.log('Logout realizado com sucesso');
+                    showAlert('Logout realizado com sucesso!', 'success');
+                    setTimeout(() => {
+                        redirectToLogin();
+                    }, 1000);
+                }
+            } catch (error) {
+                console.error('Erro no logout:', error);
+                showAlert('Erro ao fazer logout. Tente novamente.', 'error');
+            }
+        }
+
+        // Função para inicializar a aplicação
+        async function initializeApp() {
+            updateConnectionStatus('Conectando a API de Dados...', 'disconnected');
+            
+            try {
+                // Carregar perfil do usuário
+                const userProfile = await loadUserProfile(currentUser.id);
+                updateUserProfile(userProfile);
+                
+                // Testar conexão com o backend (com timeout para o Render)
+                const response = await fetchWithTimeout(`${BACKEND_URL}/api/health`, {
+                    timeout: 40000 // 40 segundos para acordar o servidor
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Erro na conexão com a API de Dados');
+                }
+                
+                const healthData = await response.json();
+                updateConnectionStatus('Conectado a API de Dados', 'connected');
+                showAlert('Conexão estabelecida com a API!', 'success');
+                
+            } catch (error) {
+                console.error('Erro ao conectar com a API:', error);
+                updateConnectionStatus('Erro na conexão', 'disconnected');
+                showAlert('Não foi possível conectar a API de Dados. O servidor pode estar iniciando (aguarde até 40s).', 'error');
+                
+                // Tentar novamente após 5 segundos
+                setTimeout(initializeApp, 5000);
+            }
+        }
+
+        // Função fetch com timeout para o Render
+        async function fetchWithTimeout(url, options = {}) {
+            const { timeout = 40000 } = options;
+            
+            const controller = new AbortController();
+            const id = setTimeout(() => controller.abort(), timeout);
+            
+            try {
+                const response = await fetch(url, {
+                    ...options,
+                    signal: controller.signal
+                });
+                clearTimeout(id);
+                return response;
+            } catch (error) {
+                clearTimeout(id);
+                throw error;
+            }
+        }
+
+        // Função para atualizar o status da conexão
+        function updateConnectionStatus(text, status) {
+            connectionText.textContent = text;
+            dbStatus.className = 'connection-status ' + status;
+        }
+
+        // Configurar máscaras para os campos
+        function setupMasks() {
+            // Máscara para CNPJ
+            const cnpjInput = document.getElementById('cnpj');
+            cnpjInput.addEventListener('input', function(e) {
+                let value = e.target.value.replace(/\D/g, '');
+                if (value.length > 14) value = value.substring(0, 14);
+                
+                if (value.length <= 14) {
+                    value = value.replace(/(\d{2})(\d)/, '$1.$2');
+                    value = value.replace(/(\d{3})(\d)/, '$1.$2');
+                    value = value.replace(/(\d{3})(\d)/, '$1/$2');
+                    value = value.replace(/(\d{4})(\d{1,2})$/, '$1-$2');
+                }
+                
+                e.target.value = value;
+            });
+
+            // Máscara para Data
+            const dataInputs = ['data_abertura', 'data_situacao'];
+            dataInputs.forEach(id => {
+                const input = document.getElementById(id);
+                input.addEventListener('input', function(e) {
+                    let value = e.target.value.replace(/\D/g, '');
+                    if (value.length > 8) value = value.substring(0, 8);
+                    
+                    if (value.length >= 5) {
+                        value = value.replace(/(\d{2})(\d)/, '$1/$2');
+                        value = value.replace(/(\d{2})(\d)/, '$1/$2');
+                    } else if (value.length >= 3) {
+                        value = value.replace(/(\d{2})(\d)/, '$1/$2');
+                    }
+                    
+                    e.target.value = value;
+                });
+            });
+
+            // Máscara para Capital Social
+            const capitalInput = document.getElementById('capital_social');
+            capitalInput.addEventListener('input', function(e) {
+                let value = e.target.value.replace(/\D/g, '');
+                if (value === '') {
+                    e.target.value = '';
+                    return;
+                }
+                
+                // Garantir que temos pelo menos 3 dígitos (para os centavos)
+                while (value.length < 3) {
+                    value = '0' + value;
+                }
+                
+                const reais = value.slice(0, -2);
+                const centavos = value.slice(-2);
+                let reaisFormatado = reais.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                if (reaisFormatado === '') reaisFormatado = '0';
+                e.target.value = `R$ ${reaisFormatado},${centavos}`;
+            });
+
+            // Máscara para CEP
+            const cepInput = document.getElementById('cep');
+            cepInput.addEventListener('input', function(e) {
+                let value = e.target.value.replace(/\D/g, '');
+                if (value.length > 8) value = value.substring(0, 8);
+                
+                if (value.length > 5) {
+                    value = value.replace(/(\d{5})(\d)/, '$1-$2');
+                }
+                
+                e.target.value = value;
+            });
+
+            // Máscara para Telefone
+            const telefoneInputs = ['telefone1', 'telefone2'];
+            telefoneInputs.forEach(id => {
+                const input = document.getElementById(id);
+                input.addEventListener('input', function(e) {
+                    let value = e.target.value.replace(/\D/g, '');
+                    if (value.length > 11) value = value.substring(0, 11);
+                    
+                    if (value.length > 10) {
+                        value = value.replace(/(\d{2})(\d)/, '($1) $2');
+                        value = value.replace(/(\d{5})(\d)/, '$1-$2');
+                    } else if (value.length > 6) {
+                        value = value.replace(/(\d{2})(\d)/, '($1) $2');
+                        value = value.replace(/(\d{4})(\d)/, '$1-$2');
+                    } else if (value.length > 2) {
+                        value = value.replace(/(\d{2})(\d)/, '($1) $2');
+                    }
+                    
+                    e.target.value = value;
+                });
+            });
+        }
+
+        // Função para configurar event listeners
+        function setupEventListeners() {
+            // Botão de atualizar
+            refreshBtn.addEventListener('click', initializeApp);
+            
+            // Consultar CNPJ
+            document.getElementById('consultar-cnpj').addEventListener('click', consultarCNPJ);
+            
+            // Salvar empresa
+            document.getElementById('salvar-empresa').addEventListener('click', salvarEmpresa);
+            
+            // Limpar campos
+            document.getElementById('limpar-campos').addEventListener('click', limparCampos);
+            
+            // Logout
+            logoutBtn.addEventListener('click', logout);
+        }
+
+        // Função para configurar listeners para pré-visualização
+        function setupPreviewListeners() {
+            const inputs = document.querySelectorAll('#empresaForm input, #empresaForm select, #empresaForm textarea');
+            inputs.forEach(input => {
+                input.addEventListener('input', updatePreview);
+                input.addEventListener('change', updatePreview);
+            });
+        }
+
+        // Função para atualizar pré-visualização
+        function updatePreview() {
+            const cnpj = document.getElementById('cnpj').value;
+            const nome_fantasia = document.getElementById('nome_fantasia').value;
+            const razao_social = document.getElementById('razao_social').value;
+            const data_abertura = document.getElementById('data_abertura').value;
+            const situacao = document.getElementById('situacao').value;
+            const data_situacao = document.getElementById('data_situacao').value;
+            const natureza_juridica = document.getElementById('natureza_juridica').value;
+            const capital_social = document.getElementById('capital_social').value;
+            const porte = document.getElementById('porte').value;
+            const simples = document.getElementById('simples').value;
+            const mei = document.getElementById('mei').value;
+            const tipo_empresa = document.getElementById('tipo_empresa').value;
+            const logradouro = document.getElementById('logradouro').value;
+            const numero = document.getElementById('numero').value;
+            const bairro = document.getElementById('bairro').value;
+            const cidade = document.getElementById('cidade').value;
+            const estado = document.getElementById('estado').value;
+            const cep = document.getElementById('cep').value;
+            const complemento = document.getElementById('complemento').value;
+            const telefone1 = document.getElementById('telefone1').value;
+            const telefone2 = document.getElementById('telefone2').value;
+            const email = document.getElementById('email').value;
+            const cnae_principal = document.getElementById('cnae_principal').value;
+            const descricao_cnae_principal = document.getElementById('descricao_cnae_principal').value;
+            const cnaes_secundarios = document.getElementById('cnaes_secundarios').value;
+            
+            if (!cnpj && !nome_fantasia && !razao_social) {
+                previewContent.innerHTML = `
+                    <div style="text-align: center; color: var(--text-light); padding: 20px;">
+                        <i class="fas fa-building" style="font-size: 48px; margin-bottom: 10px;"></i>
+                        <p>Os dados aparecerão aqui conforme você preencher o formulário</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = '';
+            
+            // Cabeçalho com informações básicas
+            html += '<div class="preview-header">';
+            html += '<div style="flex: 1;">';
+            html += `<div class="preview-name">${nome_fantasia || 'Nome Fantasia não informado'}</div>`;
+            html += `<div class="preview-position">${razao_social || 'Razão Social não informada'}</div>`;
+            html += `<div>CNPJ: ${cnpj || 'Não informado'}</div>`;
+            
+            // Badges de status
+            html += '<div style="display: flex; gap: 10px; margin-top: 10px;">';
+            if (tipo_empresa) {
+                html += `<span class="status-badge primary"><i class="fas fa-sitemap"></i> ${tipo_empresa}</span>`;
+            }
+            if (situacao) {
+                html += `<span class="status-badge ${situacao.includes('ATIVA') ? 'success' : 'warning'}">${situacao}</span>`;
+            }
+            if (simples === 'Sim') {
+                html += '<span class="status-badge success"><i class="fas fa-file-invoice-dollar"></i> Simples Nacional</span>';
+            }
+            if (mei === 'Sim') {
+                html += '<span class="status-badge warning"><i class="fas fa-user-tie"></i> MEI</span>';
+            }
+            html += '</div>';
+            
+            html += '</div>';
+            html += '</div>';
+            
+            // Seção de Dados da Empresa
+            html += '<div class="preview-section-title">Dados da Empresa</div>';
+            html += '<div class="preview-grid">';
+            html += '<div class="preview-item"><span class="preview-label">CNPJ:</span><span class="preview-value">' + (cnpj || 'Não informado') + '</span></div>';
+            html += '<div class="preview-item"><span class="preview-label">Nome Fantasia:</span><span class="preview-value">' + (nome_fantasia || 'Não informado') + '</span></div>';
+            html += '<div class="preview-item"><span class="preview-label">Razão Social:</span><span class="preview-value">' + (razao_social || 'Não informado') + '</span></div>';
+            html += '<div class="preview-item"><span class="preview-label">Data de Abertura:</span><span class="preview-value">' + (data_abertura || 'Não informado') + '</span></div>';
+            html += '<div class="preview-item"><span class="preview-label">Situação:</span><span class="preview-value">' + (situacao || 'Não informado') + '</span></div>';
+            html += '<div class="preview-item"><span class="preview-label">Data da Situação:</span><span class="preview-value">' + (data_situacao || 'Não informado') + '</span></div>';
+            html += '<div class="preview-item"><span class="preview-label">Natureza Jurídica:</span><span class="preview-value">' + (natureza_juridica || 'Não informado') + '</span></div>';
+            html += '<div class="preview-item"><span class="preview-label">Capital Social:</span><span class="preview-value">' + (capital_social || 'Não informado') + '</span></div>';
+            html += '<div class="preview-item"><span class="preview-label">Porte:</span><span class="preview-value">' + (porte || 'Não informado') + '</span></div>';
+            html += '<div class="preview-item"><span class="preview-label">Tipo:</span><span class="preview-value">' + (tipo_empresa || 'Não informado') + '</span></div>';
+            html += '<div class="preview-item"><span class="preview-label">Simples Nacional:</span><span class="preview-value">' + (simples || 'Não informado') + '</span></div>';
+            html += '<div class="preview-item"><span class="preview-label">MEI:</span><span class="preview-value">' + (mei || 'Não informado') + '</span></div>';
+            html += '</div>';
+            
+            // Seção de Endereço
+            if (logradouro || bairro || cidade || estado) {
+                html += '<div class="preview-section-title">Endereço</div>';
+                html += '<div class="preview-grid">';
+                html += '<div class="preview-item"><span class="preview-label">CEP:</span><span class="preview-value">' + (cep || 'Não informado') + '</span></div>';
+                html += '<div class="preview-item"><span class="preview-label">Logradouro:</span><span class="preview-value">' + (logradouro || 'Não informado') + '</span></div>';
+                html += '<div class="preview-item"><span class="preview-label">Número:</span><span class="preview-value">' + (numero || 'Não informado') + '</span></div>';
+                html += '<div class="preview-item"><span class="preview-label">Bairro:</span><span class="preview-value">' + (bairro || 'Não informado') + '</span></div>';
+                html += '<div class="preview-item"><span class="preview-label">Cidade:</span><span class="preview-value">' + (cidade || 'Não informado') + '</span></div>';
+                html += '<div class="preview-item"><span class="preview-label">Estado:</span><span class="preview-value">' + (estado || 'Não informado') + '</span></div>';
+                html += '<div class="preview-item"><span class="preview-label">Complemento:</span><span class="preview-value">' + (complemento || 'Não informado') + '</span></div>';
+                html += '</div>';
+            }
+            
+            // Seção de Contato
+            if (telefone1 || telefone2 || email) {
+                html += '<div class="preview-section-title">Contato</div>';
+                html += '<div class="preview-grid">';
+                if (telefone1) {
+                    html += '<div class="preview-item"><span class="preview-label">Telefone 1:</span><span class="preview-value">' + telefone1 + '</span></div>';
+                }
+                if (telefone2) {
+                    html += '<div class="preview-item"><span class="preview-label">Telefone 2:</span><span class="preview-value">' + telefone2 + '</span></div>';
+                }
+                if (email) {
+                    html += '<div class="preview-item"><span class="preview-label">E-mail:</span><span class="preview-value">' + email + '</span></div>';
+                }
+                html += '</div>';
+            }
+            
+            // Seção de Atividades Econômicas
+            if (cnae_principal || cnaes_secundarios) {
+                html += '<div class="preview-section-title">Atividades Econômicas</div>';
+                if (cnae_principal) {
+                    html += '<div class="preview-item"><span class="preview-label">CNAE Principal:</span><span class="preview-value">' + cnae_principal + '</span></div>';
+                }
+                if (descricao_cnae_principal) {
+                    html += '<div class="preview-item"><span class="preview-label">Descrição:</span><span class="preview-value">' + descricao_cnae_principal + '</span></div>';
+                }
+                if (cnaes_secundarios) {
+                    html += '<div class="preview-item"><span class="preview-label">CNAEs Secundários:</span><span class="preview-value" style="white-space: pre-line;">' + cnaes_secundarios + '</span></div>';
+                }
+            }
+            
+            previewContent.innerHTML = html;
+        }
+
+        // Funções de formatação para enviar ao backend
+        function formatarCNPJ(cnpj) {
+            return cnpj.replace(/\D/g, '');
+        }
+
+        function formatarData(data) {
+            // Converte DD/MM/AAAA para AAAA-MM-DD
+            if (!data) return null;
+            const parts = data.split('/');
+            if (parts.length === 3) {
+                return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+            }
+            return data;
+        }
+
+        function formatarCapital(capital) {
+            // Remove "R$", pontos e converte vírgula para ponto
+            if (!capital) return null;
+            let valor = capital.replace('R$', '').replace(/\./g, '').replace(',', '.').trim();
+            return parseFloat(valor) || null;
+        }
+
+        function formatarCEP(cep) {
+            return cep.replace(/\D/g, '');
+        }
+
+        function formatarTelefone(telefone) {
+            return telefone.replace(/\D/g, '');
+        }
+
+        // Função para consultar CNPJ
+        async function consultarCNPJ() {
+            const cnpj = formatarCNPJ(document.getElementById('cnpj').value);
+            
+            if (cnpj.length !== 14) {
+                showAlert('CNPJ deve conter 14 dígitos.', 'error');
+                return;
+            }
+            
+            try {
+                showAlert('Consultando CNPJ...', 'info');
+                
+                const response = await fetchWithTimeout(`${BACKEND_URL}/api/consultar-cnpj`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ cnpj: cnpj })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showAlert('Consulta CNPJ realizada com sucesso! Dados preenchidos automaticamente.', 'success');
+                    
+                    // Preencher automaticamente os campos com os dados da API
+                    if (data.data) {
+                        // Dados básicos
+                        document.getElementById('nome_fantasia').value = data.data.alias || '';
+                        document.getElementById('razao_social').value = data.data.company?.name || '';
+                        document.getElementById('data_abertura').value = data.data.founded || '';
+                        document.getElementById('situacao').value = data.data.status?.text || '';
+                        document.getElementById('data_situacao').value = data.data.statusDate || '';
+                        document.getElementById('natureza_juridica').value = data.data.company?.nature?.text || '';
+                        
+                        // Capital Social
+                        if (data.data.company?.equity) {
+                            const capital = parseFloat(data.data.company.equity).toLocaleString('pt-BR', {
+                                style: 'currency',
+                                currency: 'BRL'
+                            });
+                            document.getElementById('capital_social').value = capital;
+                        }
+                        
+                        document.getElementById('porte').value = data.data.company?.size?.text || '';
+                        document.getElementById('simples').value = data.data.company?.simples?.optant ? 'Sim' : 'Não';
+                        document.getElementById('mei').value = data.data.company?.simei?.optant ? 'Sim' : 'Não';
+                        document.getElementById('tipo_empresa').value = data.data.head ? 'Matriz' : 'Filial';
+                        
+                        // Endereço
+                        const address = data.data.address || {};
+                        document.getElementById('cep').value = address.zip || '';
+                        document.getElementById('logradouro').value = address.street || '';
+                        document.getElementById('numero').value = address.number || '';
+                        document.getElementById('bairro').value = address.district || '';
+                        document.getElementById('cidade').value = address.city || '';
+                        document.getElementById('estado').value = address.state || '';
+                        document.getElementById('complemento').value = address.details || '';
+                        
+                        // Telefones
+                        const phones = data.data.phones || [];
+                        if (phones.length > 0) {
+                            document.getElementById('telefone1').value = `(${phones[0].area}) ${phones[0].number}`;
+                        }
+                        if (phones.length > 1) {
+                            document.getElementById('telefone2').value = `(${phones[1].area}) ${phones[1].number}`;
+                        }
+                        
+                        // E-mails
+                        const emails = data.data.emails || [];
+                        if (emails.length > 0) {
+                            document.getElementById('email').value = emails[0].address || '';
+                        }
+                        
+                        // CNAE Principal
+                        const mainActivity = data.data.mainActivity || {};
+                        document.getElementById('cnae_principal').value = mainActivity.id || '';
+                        document.getElementById('descricao_cnae_principal').value = mainActivity.text || '';
+                        
+                        // CNAEs Secundários
+                        const sideActivities = data.data.sideActivities || [];
+                        if (sideActivities.length > 0) {
+                            const cnaesSecundarios = sideActivities.map(activity => 
+                                `${activity.id} - ${activity.text}`
+                            ).join('\n');
+                            document.getElementById('cnaes_secundarios').value = cnaesSecundarios;
+                        }
+                    }
+                    
+                    console.log('Dados preenchidos automaticamente:', data.data);
+                    updatePreview(); // Atualizar a pré-visualização após preencher os dados
+                    
+                } else {
+                    if (data.cnpj_existente) {
+                        showAlert(data.error, 'error');
+                    } else {
+                        showAlert(data.error, 'error');
+                    }
+                }
+                
+            } catch (error) {
+                console.error('Erro ao consultar CNPJ:', error);
+                showAlert('Erro ao consultar CNPJ. Serviço temporariamente indisponível.', 'error');
+            }
+        }
+
+        // Função para salvar empresa
+        async function salvarEmpresa() {
+            const btn = document.getElementById('salvar-empresa');
+            const originalText = btn.innerHTML;
+            
+            try {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
+                
+                // Coletar e formatar dados do formulário
+                const empresaData = {
+                    CNPJ: formatarCNPJ(document.getElementById('cnpj').value),
+                    NOME_FANTASIA: document.getElementById('nome_fantasia').value,
+                    RAZAO_SOCIAL: document.getElementById('razao_social').value,
+                    DATA_ABERTURA: formatarData(document.getElementById('data_abertura').value),
+                    SITUACAO: document.getElementById('situacao').value,
+                    DATA_SITUACAO: formatarData(document.getElementById('data_situacao').value),
+                    NATUREZA_JURIDICA: document.getElementById('natureza_juridica').value,
+                    CAPITAL_SOCIAL: formatarCapital(document.getElementById('capital_social').value),
+                    PORTE: document.getElementById('porte').value,
+                    SIMPLES: document.getElementById('simples').value,
+                    MEI: document.getElementById('mei').value,
+                    TIPO_EMPRESA: document.getElementById('tipo_empresa').value,
+                    END_CEP: formatarCEP(document.getElementById('cep').value),
+                    END_LOGRADOURO: document.getElementById('logradouro').value,
+                    END_NUMERO: document.getElementById('numero').value,
+                    END_BAIRRO: document.getElementById('bairro').value,
+                    END_CIDADE: document.getElementById('cidade').value,
+                    END_ESTADO: document.getElementById('estado').value,
+                    END_COMPLEMENTO: document.getElementById('complemento').value,
+                    TELEFONE1: formatarTelefone(document.getElementById('telefone1').value),
+                    TELEFONE2: formatarTelefone(document.getElementById('telefone2').value),
+                    EMAIL: document.getElementById('email').value,
+                    CNAE_PRINCIPAL: document.getElementById('cnae_principal').value,
+                    DESCRICAO_CNAE_PRINCIPAL: document.getElementById('descricao_cnae_principal').value,
+                    CNAES_SECUNDARIOS: document.getElementById('cnaes_secundarios').value
+                };
+                
+                // Validar campos obrigatórios
+                const camposObrigatorios = ['CNPJ', 'NOME_FANTASIA', 'RAZAO_SOCIAL'];
+                const camposFaltantes = camposObrigatorios.filter(campo => !empresaData[campo]);
+                
+                if (camposFaltantes.length > 0) {
+                    throw new Error(`Campos obrigatórios não preenchidos: ${camposFaltantes.join(', ')}`);
+                }
+                
+                // Validar CNPJ
+                if (empresaData.CNPJ.length !== 14) {
+                    throw new Error('CNPJ deve conter 14 dígitos');
+                }
+                
+                const response = await fetchWithTimeout(`${BACKEND_URL}/api/empresas`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(empresaData)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showAlert(result.message, 'success');
+                    limparCampos();
+                    
+                } else {
+                    throw new Error(result.error);
+                }
+                
+            } catch (error) {
+                console.error('Erro ao salvar empresa:', error);
+                showAlert(`Erro ao salvar empresa: ${error.message}`, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        }
+
+        // Função para limpar campos do formulário
+        function limparCampos() {
+            document.querySelectorAll('#empresaForm input, #empresaForm select, #empresaForm textarea').forEach(element => {
+                if (element.type !== 'button' && element.type !== 'checkbox' && element.type !== 'file') {
+                    element.value = '';
+                } else if (element.type === 'checkbox') {
+                    element.checked = false;
+                } else if (element.type === 'file') {
+                    element.value = '';
+                }
+            });
+            
+            updatePreview();
+        }
+
+        // Funções auxiliares
+        function showAlert(message, type) {
+            // Limpar alertas anteriores
+            globalAlert.innerHTML = '';
+            
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.innerHTML = `
+                <i class="fas fa-${type === 'error' ? 'exclamation-triangle' : type === 'success' ? 'check-circle' : 'info-circle'}"></i>
+                <span>${message}</span>
+            `;
+            
+            globalAlert.appendChild(alertDiv);
+            
+            // Exibir o alerta
+            alertDiv.style.display = 'flex';
+            
+            // Remover após 5 segundos (exceto para errors)
+            if (type !== 'error') {
+                setTimeout(() => {
+                    alertDiv.remove();
+                }, 5000);
+            }
+        }
+    </script>
+</body>
+</html>

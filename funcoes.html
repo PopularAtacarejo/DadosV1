@@ -1,0 +1,1413 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Funções - RH</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --primary-color: #5d78ff;
+            --secondary-color: #8a9bff;
+            --accent-color: #ff6b8b;
+            --success-color: #4caf50;
+            --warning-color: #ff9800;
+            --error-color: #f44336;
+            --light-color: #f8f9ff;
+            --dark-color: #2d3748;
+            --gray-light: #f1f3f9;
+            --gray-medium: #e2e8f0;
+            --text-light: #718096;
+            --text-dark: #2d3748;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+            --radius: 12px;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7ff 0%, #e6eeff 100%);
+            color: var(--text-dark);
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+        }
+
+        /* Menu Lateral */
+        .sidebar {
+            width: 280px;
+            background: white;
+            box-shadow: var(--shadow);
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            overflow-y: auto;
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--gray-medium);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sidebar-header h1 {
+            font-size: 1.3rem;
+            color: var(--primary-color);
+        }
+
+        .user-profile {
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            border-bottom: 1px solid var(--gray-medium);
+        }
+
+        .user-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .user-avatar img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .user-info {
+            flex: 1;
+        }
+
+        .user-name {
+            font-weight: 600;
+            font-size: 16px;
+            color: var(--text-dark);
+        }
+
+        .user-role {
+            font-size: 14px;
+            color: var(--text-light);
+        }
+
+        .sidebar-menu {
+            padding: 15px 0;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 20px;
+            color: var(--text-dark);
+            text-decoration: none;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .menu-item:hover {
+            background-color: var(--light-color);
+            color: var(--primary-color);
+        }
+
+        .menu-item.active {
+            background-color: var(--light-color);
+            color: var(--primary-color);
+            border-right: 3px solid var(--primary-color);
+        }
+
+        .menu-item i {
+            width: 20px;
+            text-align: center;
+        }
+
+        .menu-divider {
+            height: 1px;
+            background-color: var(--gray-medium);
+            margin: 10px 20px;
+        }
+
+        /* Conteúdo Principal */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            transition: all 0.3s;
+        }
+
+        .top-header {
+            background: white;
+            border-radius: 0 0 var(--radius) var(--radius);
+            padding: 15px 25px;
+            box-shadow: var(--shadow);
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .page-title {
+            font-size: 1.5rem;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--primary-color);
+            cursor: pointer;
+        }
+        
+        /* Restante do CSS da página de funções */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .form-container {
+            background-color: white;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        
+        .form-section {
+            background-color: white;
+            border-radius: var(--radius);
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+            border-left: 4px solid var(--primary-color);
+        }
+        
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            color: var(--primary-color);
+            font-size: 1.1rem;
+        }
+        
+        .section-title i {
+            background-color: var(--light-color);
+            border-radius: 8px;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+            position: relative;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            color: var(--text-dark);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+        }
+        
+        .input-with-icon {
+            position: relative;
+        }
+        
+        .input-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+        
+        input:not([type="file"]):not([type="checkbox"]), select, textarea {
+            width: 100%;
+            padding: 12px 12px 12px 40px;
+            border: 1px solid var(--gray-medium);
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s;
+            background-color: var(--light-color);
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--primary-color);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(93, 120, 255, 0.2);
+            background-color: white;
+        }
+        
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(93, 120, 255, 0.3);
+        }
+        
+        .btn-success {
+            background-color: var(--success-color);
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background-color: #3d8b40;
+        }
+        
+        .btn-danger {
+            background-color: var(--error-color);
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background-color: #d32f2f;
+        }
+        
+        .btn-warning {
+            background-color: var(--warning-color);
+            color: white;
+        }
+        
+        .btn-warning:hover {
+            background-color: #f57c00;
+        }
+        
+        .btn-sm {
+            padding: 8px 12px;
+            font-size: 12px;
+        }
+        
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 25px;
+            flex-wrap: wrap;
+        }
+        
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+        }
+
+        .card {
+            background: white;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
+            overflow: hidden;
+            border-left: 4px solid var(--primary-color);
+        }
+        
+        .card-header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            padding: 15px 20px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .card-body {
+            padding: 20px;
+        }
+
+        .connection-status {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+        
+        .connected {
+            background-color: var(--success-color);
+        }
+        
+        .disconnected {
+            background-color: var(--error-color);
+        }
+
+        .alert {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+        }
+        
+        .alert-error {
+            background-color: #fff5f5;
+            color: var(--error-color);
+            border: 1px solid #fed7d7;
+        }
+        
+        .alert-success {
+            background-color: #f0fff4;
+            color: var(--success-color);
+            border: 1px solid #c6f6d5;
+        }
+        
+        .alert-info {
+            background-color: #e6f3ff;
+            color: var(--primary-color);
+            border: 1px solid #b3d9ff;
+        }
+
+        footer {
+            background-color: var(--dark-color);
+            color: white;
+            text-align: center;
+            padding: 20px 0;
+            margin-top: 40px;
+            border-radius: var(--radius) var(--radius) 0 0;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-light);
+        }
+        
+        .loading i {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        /* Tabela de Funções */
+        .table-container {
+            overflow-x: auto;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            margin-top: 20px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: white;
+        }
+        
+        thead {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+        }
+        
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--gray-medium);
+        }
+        
+        th {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        
+        td {
+            font-size: 0.9rem;
+        }
+        
+        tbody tr:hover {
+            background-color: var(--light-color);
+        }
+        
+        .actions-cell {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .descricao-cell {
+            max-width: 300px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-light);
+        }
+        
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+
+        /* Badges de Status */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .status-badge.primary {
+            background: rgba(93, 120, 255, 0.1);
+            color: var(--primary-color);
+        }
+
+        .status-badge.success {
+            background: rgba(76, 175, 80, 0.1);
+            color: var(--success-color);
+        }
+
+        .status-badge.warning {
+            background: rgba(255, 152, 0, 0.1);
+            color: var(--warning-color);
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            display: none;
+        }
+        
+        .modal {
+            background-color: white;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--gray-medium);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-body {
+            padding: 20px;
+        }
+        
+        .modal-footer {
+            padding: 20px;
+            border-top: 1px solid var(--gray-medium);
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+            color: var(--text-light);
+        }
+
+        /* Responsividade */
+        @media (max-width: 992px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .menu-toggle {
+                display: block;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .grid-2, .grid-3 {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-actions {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+            }
+            
+            .actions-cell {
+                flex-direction: column;
+            }
+            
+            .modal {
+                width: 95%;
+                margin: 20px;
+            }
+            
+            th, td {
+                padding: 10px 8px;
+                font-size: 0.85rem;
+            }
+            
+            .descricao-cell {
+                max-width: 150px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Menu Lateral -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <i class="fas fa-chart-bar"></i>
+            <h1>Sistema de RH</h1>
+        </div>
+        
+        <!-- Perfil do Usuário -->
+        <div class="user-profile">
+            <div class="user-avatar" id="user-avatar">
+                <!-- Avatar será preenchido via JavaScript -->
+            </div>
+            <div class="user-info">
+                <div class="user-name" id="user-name">Carregando...</div>
+                <div class="user-role" id="user-role">Usuário</div>
+            </div>
+        </div>
+        
+        <!-- Menu de Navegação -->
+        <div class="sidebar-menu">
+            <a href="dashboard.html" class="menu-item">
+                <i class="fas fa-chart-bar"></i>
+                Dashboard
+            </a>
+            <a href="busca.html" class="menu-item">
+                <i class="fas fa-search"></i>
+                Busca
+            </a>
+            <a href="cadastro.html" class="menu-item">
+                <i class="fas fa-user-plus"></i>
+                Cadastro
+            </a>
+            <a href="empresa.html" class="menu-item">
+                <i class="fas fa-building"></i>
+                Empresa
+            </a>
+            <a href="funcionarios.html" class="menu-item">
+                <i class="fas fa-users"></i>
+                Funcionários
+            </a>
+            <a href="funcoes.html" class="menu-item active">
+                <i class="fas fa-briefcase"></i>
+                Funções
+            </a>
+            <a href="lideres.html" class="menu-item">
+                <i class="fas fa-crown"></i>
+                Líderes
+            </a>
+            <a href="listaempresas.html" class="menu-item">
+                <i class="fas fa-list"></i>
+                Lista de Empresas
+            </a>
+            <a href="setores.html" class="menu-item">
+                <i class="fas fa-sitemap"></i>
+                Setores
+            </a>
+            
+            <div class="menu-divider"></div>
+            
+            <a href="#" class="menu-item" id="logout-btn">
+                <i class="fas fa-sign-out-alt"></i>
+                Sair
+            </a>
+        </div>
+    </div>
+
+    <!-- Conteúdo Principal -->
+    <div class="main-content" id="main-content">
+        <!-- Top Header -->
+        <div class="top-header">
+            <div class="page-title">
+                <i class="fas fa-briefcase"></i>
+                Cadastro de Funções - RH
+            </div>
+            <div class="header-actions">
+                <button class="menu-toggle" id="menu-toggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="container">
+            <div id="global-alert"></div>
+            
+            <div class="form-container">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 style="color: white; margin: 0;">Cadastro de Funções</h2>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span class="connection-status" id="db-status"></span>
+                            <span id="connection-text" style="color: white;">Conectando...</span>
+                            <button class="btn btn-primary" id="refresh-btn">
+                                <i class="fas fa-sync-alt"></i>
+                                Atualizar
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <!-- Formulário de Função -->
+                        <div id="form-tab">
+                            <form id="funcaoForm">
+                                <div class="form-section">
+                                    <div class="section-title">
+                                        <i class="fas fa-briefcase"></i>
+                                        <h3>Informações da Função</h3>
+                                    </div>
+                                    
+                                    <div class="grid-2">
+                                        <div class="form-group">
+                                            <label for="nome">
+                                                <i class="fas fa-signature"></i>
+                                                Nome da Função *
+                                            </label>
+                                            <div class="input-with-icon">
+                                                <i class="fas fa-briefcase input-icon"></i>
+                                                <input type="text" id="nome" required placeholder="Ex: Analista de RH">
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="form-group">
+                                            <label for="cbo">
+                                                <i class="fas fa-hashtag"></i>
+                                                Código CBO *
+                                            </label>
+                                            <div class="input-with-icon">
+                                                <i class="fas fa-code input-icon"></i>
+                                                <input type="text" id="cbo" required placeholder="Ex: 252105">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="descricao">
+                                            <i class="fas fa-file-alt"></i>
+                                            Descrição das Atividades
+                                        </label>
+                                        <div class="input-with-icon">
+                                            <i class="fas fa-align-left input-icon" style="top: 20px;"></i>
+                                            <textarea id="descricao" rows="4" placeholder="Descreva as principais atividades desta função..."></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-actions">
+                                    <button type="button" class="btn btn-danger" id="limpar-campos">
+                                        <i class="fas fa-broom"></i>
+                                        Limpar Campos
+                                    </button>
+                                    <button type="button" class="btn btn-warning" id="cancelar-edicao" style="display: none;">
+                                        <i class="fas fa-times"></i>
+                                        Cancelar Edição
+                                    </button>
+                                    <button type="submit" class="btn btn-success" id="salvar-funcao">
+                                        <i class="fas fa-save"></i>
+                                        Salvar Função
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Lista de Funções -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 style="color: white; margin: 0;">Funções Cadastradas</h2>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span id="total-funcoes">0 funções</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-container">
+                        <table id="tabela-funcoes">
+                            <thead>
+                                <tr>
+                                    <th>Nome da Função</th>
+                                    <th>CBO</th>
+                                    <th>Descrição</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="corpo-tabela">
+                                <!-- Dados serão carregados aqui -->
+                            </tbody>
+                        </table>
+                        <div id="empty-state" class="empty-state">
+                            <i class="fas fa-briefcase"></i>
+                            <h3>Nenhuma função cadastrada</h3>
+                            <p>Use o formulário acima para cadastrar a primeira função.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal de Confirmação de Exclusão -->
+        <div class="modal-overlay" id="modal-excluir">
+            <div class="modal">
+                <div class="modal-header">
+                    <h3>Confirmar Exclusão</h3>
+                    <button class="close-modal" id="fechar-modal-excluir">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>Tem certeza que deseja excluir a função <strong id="nome-funcao-excluir"></strong>?</p>
+                    <p class="alert alert-warning" style="display: flex; margin-top: 15px;">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <span>Esta ação não pode ser desfeita.</span>
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-danger" id="confirmar-exclusao">
+                        <i class="fas fa-trash"></i>
+                        Excluir
+                    </button>
+                    <button class="btn btn-primary" id="cancelar-exclusao">
+                        <i class="fas fa-times"></i>
+                        Cancelar
+                    </button>
+                </div>
+            </div>
+        </div>
+
+       <footer>
+    <div class="container">
+        <p>
+            Sistema Desenvolvido por 
+            <a href="https://wa.me/5582999158412" 
+               target="_blank" 
+               style="color: white; text-decoration: underline; font-weight: bold;"
+               onmouseover="this.style.color='#5d78ff'" 
+               onmouseout="this.style.color='white'">
+                Jeferson
+            </a>
+        </p>
+        <p>Análise de dados de RH 2025 - Todos os direitos reservados</p>
+        <p style="font-size: 0.8rem; margin-top: 10px; opacity: 0.8;">
+            <i class="fas fa-mobile-alt"></i> WhatsApp: (82) 99915-8412
+        </p>
+    </div>
+</footer>
+    </div>
+
+    <script>
+        // ===================================================================
+        // 🔑 CONFIGURAÇÃO SUPABASE (Credenciais Fornecidas)
+        // ===================================================================
+        const SUPABASE_URL = "https://tmgglppfobyoosfiewoa.supabase.co";
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRtZ2dscHBmb2J5b29zZmlld29hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM3Mjg4NTEsImV4cCI6MjA3OTMwNDg1MX0.DH3IyjnE7zztySzyckKREy5Zlgmg2aJe4TEXIbmFmkA";
+        
+        // Inicializar cliente Supabase
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        
+        // Elementos DOM
+        const dbStatus = document.getElementById('db-status');
+        const connectionText = document.getElementById('connection-text');
+        const refreshBtn = document.getElementById('refresh-btn');
+        const menuToggle = document.getElementById('menu-toggle');
+        const sidebar = document.getElementById('sidebar');
+        const globalAlert = document.getElementById('global-alert');
+        const funcaoForm = document.getElementById('funcaoForm');
+        const corpoTabela = document.getElementById('corpo-tabela');
+        const emptyState = document.getElementById('empty-state');
+        const totalFuncoes = document.getElementById('total-funcoes');
+        const modalExcluir = document.getElementById('modal-excluir');
+        const nomeFuncaoExcluir = document.getElementById('nome-funcao-excluir');
+        const cancelarEdicaoBtn = document.getElementById('cancelar-edicao');
+        const logoutBtn = document.getElementById('logout-btn');
+
+        // Variáveis globais
+        let funcoes = [];
+        let modoEdicao = false;
+        let funcaoEditando = null;
+        let currentUser = null;
+
+        // Inicializar a aplicação
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Verificar autenticação primeiro
+            currentUser = await checkAuth();
+            
+            // Se autenticado, inicializar o restante da aplicação
+            if (currentUser) {
+                await initializeApp();
+                setupEventListeners();
+            }
+        });
+
+        // Função para verificar autenticação
+        async function checkAuth() {
+            try {
+                const { data: { session }, error } = await supabase.auth.getSession();
+                
+                if (error) {
+                    console.error('Erro ao verificar sessão:', error);
+                    redirectToLogin();
+                    return null;
+                }
+                
+                if (!session) {
+                    console.log('Nenhuma sessão ativa encontrada. Redirecionando para login...');
+                    redirectToLogin();
+                    return null;
+                }
+                
+                return session.user;
+            } catch (error) {
+                console.error('Erro na verificação de autenticação:', error);
+                redirectToLogin();
+                return null;
+            }
+        }
+
+        // Função para redirecionar para login
+        function redirectToLogin() {
+            const currentPath = window.location.pathname + window.location.search;
+            sessionStorage.setItem('redirectAfterLogin', currentPath);
+            window.location.href = 'index.html';
+        }
+
+        // Função para carregar perfil do usuário
+        async function loadUserProfile(userId) {
+            try {
+                const { data, error } = await supabase
+                    .from('profiles')
+                    .select('nome, funcao, avatar_url')
+                    .eq('id', userId)
+                    .single();
+                    
+                if (error) {
+                    console.error('Erro ao carregar perfil do usuário:', error);
+                    const userData = await supabase.auth.getUser();
+                    return {
+                        id: userId,
+                        email: userData.data.user?.email || 'Usuário',
+                        nome: userData.data.user?.email?.split('@')[0] || 'Usuário',
+                        funcao: 'Usuário',
+                        avatar: null
+                    };
+                } else {
+                    const userData = await supabase.auth.getUser();
+                    return {
+                        id: userId,
+                        email: userData.data.user?.email || 'Usuário',
+                        nome: data.nome || userData.data.user?.email?.split('@')[0] || 'Usuário',
+                        funcao: data.funcao || 'Usuário',
+                        avatar: data.avatar_url
+                    };
+                }
+            } catch (error) {
+                console.error('Erro ao carregar perfil:', error);
+                const userData = await supabase.auth.getUser();
+                return {
+                    id: userId,
+                    email: userData.data.user?.email || 'Usuário',
+                    nome: userData.data.user?.email?.split('@')[0] || 'Usuário',
+                    funcao: 'Usuário',
+                    avatar: null
+                };
+            }
+        }
+
+        // Função para atualizar perfil do usuário na interface
+        function updateUserProfile(userProfile) {
+            if (!userProfile) return;
+
+            const userName = document.getElementById('user-name');
+            const userRole = document.getElementById('user-role');
+            const userAvatar = document.getElementById('user-avatar');
+
+            if (userName) userName.textContent = userProfile.nome;
+            if (userRole) userRole.textContent = userProfile.funcao;
+            
+            if (userAvatar) {
+                const initials = userProfile.nome.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+                if (userProfile.avatar) {
+                    userAvatar.innerHTML = `<img src="${userProfile.avatar}" alt="${userProfile.nome}">`;
+                } else {
+                    userAvatar.innerHTML = initials;
+                }
+            }
+        }
+
+        // Função para fazer logout
+        async function logout() {
+            try {
+                const { error } = await supabase.auth.signOut();
+                if (error) {
+                    console.error('Erro ao fazer logout:', error);
+                    showAlert('Erro ao fazer logout. Tente novamente.', 'error');
+                } else {
+                    console.log('Logout realizado com sucesso');
+                    showAlert('Logout realizado com sucesso!', 'success');
+                    setTimeout(() => {
+                        redirectToLogin();
+                    }, 1000);
+                }
+            } catch (error) {
+                console.error('Erro no logout:', error);
+                showAlert('Erro ao fazer logout. Tente novamente.', 'error');
+            }
+        }
+
+        // Função para inicializar a aplicação
+        async function initializeApp() {
+            updateConnectionStatus('Conectando ao Banco de Dados...', 'disconnected');
+            
+            try {
+                // Carregar perfil do usuário
+                const userProfile = await loadUserProfile(currentUser.id);
+                updateUserProfile(userProfile);
+                
+                // Testar conexão com o Supabase
+                const { data, error } = await supabase
+                    .from('funcoes')
+                    .select('*')
+                    .limit(1);
+                
+                if (error) {
+                    // Verificar se a tabela não existe e tentar criá-la
+                    if (error.code === 'PGRST204' || error.message.includes('does not exist')) {
+                        showAlert('Tabela de funções não encontrada. Criando tabela...', 'info');
+                        await criarTabelaFuncoes();
+                    } else {
+                        throw error;
+                    }
+                }
+                
+                updateConnectionStatus('Conectado ao Banco de Dados', 'connected');
+                showAlert('Conexão estabelecida com o Banco de Dados!', 'success');
+                
+                // Carregar dados iniciais
+                await loadFuncoes();
+                
+            } catch (error) {
+                console.error('Erro ao conectar com o Supabase:', error);
+                updateConnectionStatus('Erro na conexão', 'disconnected');
+                showAlert(`Não foi possível conectar ao Supabase: ${error.message}`, 'error');
+            }
+        }
+
+        // Função para criar a tabela de funções (se não existir)
+        async function criarTabelaFuncoes() {
+            // Como não podemos executar DDL diretamente do cliente Supabase,
+            // vamos criar uma função para inserir dados que funcionará mesmo sem a tabela
+            // A tabela precisará ser criada manualmente no Supabase
+            
+            showAlert('A tabela "funcoes" não existe. Por favor, crie-a manualmente no Supabase.', 'error');
+            
+            // Estrutura esperada da tabela:
+            // CREATE TABLE funcoes (
+            //   id BIGSERIAL PRIMARY KEY,
+            //   nome TEXT NOT NULL,
+            //   cbo TEXT NOT NULL,
+            //   descricao TEXT,
+            //   created_at TIMESTAMP DEFAULT NOW()
+            // );
+        }
+
+        // Função para atualizar o status da conexão
+        function updateConnectionStatus(text, status) {
+            connectionText.textContent = text;
+            dbStatus.className = 'connection-status ' + status;
+        }
+
+        // Função para carregar funções do Supabase
+        async function loadFuncoes() {
+            try {
+                const { data, error } = await supabase
+                    .from('funcoes')
+                    .select('*')
+                    .order('nome');
+                
+                if (error) throw error;
+                
+                funcoes = data || [];
+                renderFuncoes();
+                
+            } catch (error) {
+                console.error('Erro ao carregar funções:', error);
+                showAlert(`Erro ao carregar funções: ${error.message}`, 'error');
+            }
+        }
+
+        // Função para renderizar a lista de funções
+        function renderFuncoes() {
+            // Atualizar contador
+            totalFuncoes.textContent = `${funcoes.length} ${funcoes.length === 1 ? 'função' : 'funções'}`;
+            
+            if (funcoes.length === 0) {
+                emptyState.style.display = 'block';
+                corpoTabela.innerHTML = '';
+                return;
+            }
+            
+            emptyState.style.display = 'none';
+            
+            let html = '';
+            
+            funcoes.forEach(funcao => {
+                const nome = funcao.nome;
+                const cbo = funcao.cbo;
+                const descricao = funcao.descricao || 'Sem descrição';
+                
+                html += `
+                    <tr data-id="${funcao.id}">
+                        <td>${nome}</td>
+                        <td>${cbo}</td>
+                        <td class="descricao-cell" title="${descricao}">${descricao}</td>
+                        <td class="actions-cell">
+                            <button class="btn btn-sm btn-primary btn-editar" data-id="${funcao.id}">
+                                <i class="fas fa-edit"></i>
+                                Editar
+                            </button>
+                            <button class="btn btn-sm btn-danger btn-excluir" data-id="${funcao.id}" data-nome="${nome}">
+                                <i class="fas fa-trash"></i>
+                                Excluir
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            corpoTabela.innerHTML = html;
+            
+            // Adicionar eventos aos botões
+            document.querySelectorAll('.btn-editar').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const id = this.getAttribute('data-id');
+                    editarFuncao(id);
+                });
+            });
+            
+            document.querySelectorAll('.btn-excluir').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const id = this.getAttribute('data-id');
+                    const nome = this.getAttribute('data-nome');
+                    abrirModalExcluir(id, nome);
+                });
+            });
+        }
+
+        // Função para configurar event listeners
+        function setupEventListeners() {
+            // Menu mobile toggle
+            menuToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('active');
+            });
+            
+            // Fechar menu ao clicar fora (em telas menores)
+            document.addEventListener('click', (e) => {
+                if (window.innerWidth <= 992 && !sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
+                    sidebar.classList.remove('active');
+                }
+            });
+
+            // Botão de atualizar
+            refreshBtn.addEventListener('click', loadFuncoes);
+            
+            // Formulário de função
+            funcaoForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                salvarFuncao();
+            });
+            
+            // Limpar campos
+            document.getElementById('limpar-campos').addEventListener('click', limparCampos);
+            
+            // Cancelar edição
+            cancelarEdicaoBtn.addEventListener('click', function() {
+                modoEdicao = false;
+                funcaoEditando = null;
+                limparCampos();
+                atualizarInterfaceModoEdicao();
+            });
+            
+            // Modal de exclusão
+            document.getElementById('fechar-modal-excluir').addEventListener('click', function() {
+                modalExcluir.style.display = 'none';
+            });
+            
+            document.getElementById('cancelar-exclusao').addEventListener('click', function() {
+                modalExcluir.style.display = 'none';
+            });
+            
+            document.getElementById('confirmar-exclusao').addEventListener('click', excluirFuncao);
+            
+            // Fechar modal ao clicar fora
+            modalExcluir.addEventListener('click', function(e) {
+                if (e.target === modalExcluir) {
+                    modalExcluir.style.display = 'none';
+                }
+            });
+            
+            // Logout
+            logoutBtn.addEventListener('click', logout);
+        }
+
+        // Função para salvar função (criar ou atualizar)
+        async function salvarFuncao() {
+            const btn = document.getElementById('salvar-funcao');
+            const originalText = btn.innerHTML;
+            
+            try {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
+                
+                const nome = document.getElementById('nome').value;
+                const cbo = document.getElementById('cbo').value;
+                const descricao = document.getElementById('descricao').value;
+                
+                if (!nome || !cbo) {
+                    throw new Error('Nome e CBO são campos obrigatórios.');
+                }
+                
+                const funcaoData = {
+                    nome: nome,
+                    cbo: cbo,
+                    descricao: descricao
+                };
+                
+                let result;
+                
+                if (modoEdicao && funcaoEditando) {
+                    // Atualizar função existente
+                    const { data, error } = await supabase
+                        .from('funcoes')
+                        .update(funcaoData)
+                        .eq('id', funcaoEditando.id)
+                        .select();
+                    
+                    if (error) throw error;
+                    
+                    result = { success: true, message: 'Função atualizada com sucesso!' };
+                } else {
+                    // Criar nova função
+                    const { data, error } = await supabase
+                        .from('funcoes')
+                        .insert([funcaoData])
+                        .select();
+                    
+                    if (error) throw error;
+                    
+                    result = { success: true, message: 'Função cadastrada com sucesso!' };
+                }
+                
+                showAlert(result.message, 'success');
+                limparCampos();
+                
+                // Recarregar lista de funções
+                await loadFuncoes();
+                
+            } catch (error) {
+                console.error('Erro ao salvar função:', error);
+                showAlert(`Erro ao salvar função: ${error.message}`, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        }
+
+        // Função para editar função
+        function editarFuncao(id) {
+            const funcao = funcoes.find(f => f.id == id);
+            
+            if (!funcao) {
+                showAlert('Função não encontrada.', 'error');
+                return;
+            }
+            
+            modoEdicao = true;
+            funcaoEditando = funcao;
+            
+            // Preencher formulário com dados da função
+            document.getElementById('nome').value = funcao.nome;
+            document.getElementById('cbo').value = funcao.cbo;
+            document.getElementById('descricao').value = funcao.descricao || '';
+            
+            // Atualizar interface para modo edição
+            atualizarInterfaceModoEdicao();
+            
+            // Rolar para o topo do formulário
+            document.getElementById('form-tab').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Função para atualizar interface no modo edição
+        function atualizarInterfaceModoEdicao() {
+            const salvarBtn = document.getElementById('salvar-funcao');
+            
+            if (modoEdicao) {
+                salvarBtn.innerHTML = '<i class="fas fa-save"></i> Atualizar Função';
+                cancelarEdicaoBtn.style.display = 'flex';
+                document.getElementById('limpar-campos').style.display = 'none';
+            } else {
+                salvarBtn.innerHTML = '<i class="fas fa-save"></i> Salvar Função';
+                cancelarEdicaoBtn.style.display = 'none';
+                document.getElementById('limpar-campos').style.display = 'flex';
+            }
+        }
+
+        // Função para abrir modal de exclusão
+        function abrirModalExcluir(id, nome) {
+            modalExcluir.style.display = 'flex';
+            nomeFuncaoExcluir.textContent = nome;
+            document.getElementById('confirmar-exclusao').setAttribute('data-id', id);
+        }
+
+        // Função para excluir função
+        async function excluirFuncao() {
+            const btn = document.getElementById('confirmar-exclusao');
+            const id = btn.getAttribute('data-id');
+            const originalText = btn.innerHTML;
+            
+            try {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Excluindo...';
+                
+                const { error } = await supabase
+                    .from('funcoes')
+                    .delete()
+                    .eq('id', id);
+                
+                if (error) throw error;
+                
+                showAlert('Função excluída com sucesso!', 'success');
+                modalExcluir.style.display = 'none';
+                
+                // Recarregar lista de funções
+                await loadFuncoes();
+                
+            } catch (error) {
+                console.error('Erro ao excluir função:', error);
+                showAlert(`Erro ao excluir função: ${error.message}`, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        }
+
+        // Função para limpar campos do formulário
+        function limparCampos() {
+            document.getElementById('nome').value = '';
+            document.getElementById('cbo').value = '';
+            document.getElementById('descricao').value = '';
+            
+            // Sair do modo edição se estiver editando
+            if (modoEdicao) {
+                modoEdicao = false;
+                funcaoEditando = null;
+                atualizarInterfaceModoEdicao();
+            }
+        }
+
+        // Funções auxiliares
+        function showAlert(message, type) {
+            // Limpar alertas anteriores
+            globalAlert.innerHTML = '';
+            
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.innerHTML = `
+                <i class="fas fa-${type === 'error' ? 'exclamation-triangle' : type === 'success' ? 'check-circle' : 'info-circle'}"></i>
+                <span>${message}</span>
+            `;
+            
+            globalAlert.appendChild(alertDiv);
+            
+            // Remover após 5 segundos (exceto para errors)
+            if (type !== 'error') {
+                setTimeout(() => {
+                    alertDiv.remove();
+                }, 5000);
+            }
+        }
+    </script>
+</body>
+</html>

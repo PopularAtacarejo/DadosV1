@@ -1,0 +1,2006 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Líderes - RH</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        /* Todos os estilos do menu lateral mantidos */
+        :root {
+            --primary-color: #5d78ff;
+            --secondary-color: #8a9bff;
+            --accent-color: #ff6b8b;
+            --success-color: #4caf50;
+            --warning-color: #ff9800;
+            --error-color: #f44336;
+            --light-color: #f8f9ff;
+            --dark-color: #2d3748;
+            --gray-light: #f1f3f9;
+            --gray-medium: #e2e8f0;
+            --text-light: #718096;
+            --text-dark: #2d3748;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+            --radius: 12px;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7ff 0%, #e6eeff 100%);
+            color: var(--text-dark);
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+        }
+
+        /* Menu Lateral - mantido igual */
+        .sidebar {
+            width: 280px;
+            background: white;
+            box-shadow: var(--shadow);
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            overflow-y: auto;
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--gray-medium);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sidebar-header h1 {
+            font-size: 1.3rem;
+            color: var(--primary-color);
+        }
+
+        .user-profile {
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            border-bottom: 1px solid var(--gray-medium);
+        }
+
+        .user-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .user-avatar img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .user-info {
+            flex: 1;
+        }
+
+        .user-name {
+            font-weight: 600;
+            font-size: 16px;
+            color: var(--text-dark);
+        }
+
+        .user-role {
+            font-size: 14px;
+            color: var(--text-light);
+        }
+
+        .sidebar-menu {
+            padding: 15px 0;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 20px;
+            color: var(--text-dark);
+            text-decoration: none;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .menu-item:hover {
+            background-color: var(--light-color);
+            color: var(--primary-color);
+        }
+
+        .menu-item.active {
+            background-color: var(--light-color);
+            color: var(--primary-color);
+            border-right: 3px solid var(--primary-color);
+        }
+
+        .menu-item i {
+            width: 20px;
+            text-align: center;
+        }
+
+        .menu-divider {
+            height: 1px;
+            background-color: var(--gray-medium);
+            margin: 10px 20px;
+        }
+
+        /* Conteúdo Principal */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            transition: all 0.3s;
+        }
+
+        .top-header {
+            background: white;
+            border-radius: 0 0 var(--radius) var(--radius);
+            padding: 15px 25px;
+            box-shadow: var(--shadow);
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .page-title {
+            font-size: 1.5rem;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--primary-color);
+            cursor: pointer;
+        }
+        
+        /* Restante do CSS mantido igual */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .form-container {
+            background-color: white;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        
+        .form-section {
+            background-color: white;
+            border-radius: var(--radius);
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+            border-left: 4px solid var(--primary-color);
+        }
+        
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            color: var(--primary-color);
+            font-size: 1.1rem;
+        }
+        
+        .section-title i {
+            background-color: var(--light-color);
+            border-radius: 8px;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+            position: relative;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            color: var(--text-dark);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+        }
+        
+        .input-with-icon {
+            position: relative;
+        }
+        
+        .input-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+        
+        input:not([type="file"]):not([type="checkbox"]), select, textarea {
+            width: 100%;
+            padding: 12px 12px 12px 40px;
+            border: 1px solid var(--gray-medium);
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s;
+            background-color: var(--light-color);
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--primary-color);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(93, 120, 255, 0.2);
+            background-color: white;
+        }
+        
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(93, 120, 255, 0.3);
+        }
+        
+        .btn-success {
+            background-color: var(--success-color);
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background-color: #3d8b40;
+        }
+        
+        .btn-danger {
+            background-color: var(--error-color);
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background-color: #d32f2f;
+        }
+        
+        .btn-warning {
+            background-color: var(--warning-color);
+            color: white;
+        }
+        
+        .btn-warning:hover {
+            background-color: #f57c00;
+        }
+        
+        .btn-sm {
+            padding: 8px 12px;
+            font-size: 12px;
+        }
+        
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 25px;
+            flex-wrap: wrap;
+        }
+        
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+        }
+
+        .card {
+            background: white;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
+            overflow: hidden;
+            border-left: 4px solid var(--primary-color);
+        }
+        
+        .card-header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            padding: 15px 20px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .card-body {
+            padding: 20px;
+        }
+
+        .connection-status {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+        
+        .connected {
+            background-color: var(--success-color);
+        }
+        
+        .disconnected {
+            background-color: var(--error-color);
+        }
+
+        .alert {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+        }
+        
+        .alert-error {
+            background-color: #fff5f5;
+            color: var(--error-color);
+            border: 1px solid #fed7d7;
+        }
+        
+        .alert-success {
+            background-color: #f0fff4;
+            color: var(--success-color);
+            border: 1px solid #c6f6d5;
+        }
+        
+        .alert-info {
+            background-color: #e6f3ff;
+            color: var(--primary-color);
+            border: 1px solid #b3d9ff;
+        }
+
+        footer {
+            background-color: var(--dark-color);
+            color: white;
+            text-align: center;
+            padding: 20px 0;
+            margin-top: 40px;
+            border-radius: var(--radius) var(--radius) 0 0;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-light);
+        }
+        
+        .loading i {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        /* Seções designadas */
+        .secoes-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .secao-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px;
+            background: var(--light-color);
+            border-radius: var(--radius);
+            border: 1px solid var(--gray-medium);
+        }
+
+        .secao-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .secao-nome {
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .secao-funcionarios {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 5px;
+        }
+
+        .funcionario-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 8px;
+            background: white;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            border: 1px solid var(--gray-medium);
+        }
+
+        .remove-secao {
+            background: var(--error-color);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        /* Lista de funcionários */
+        .funcionarios-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .funcionario-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 15px;
+            background: var(--light-color);
+            border-radius: var(--radius);
+            border: 1px solid var(--gray-medium);
+        }
+
+        .funcionario-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .funcionario-nome {
+            font-weight: 600;
+        }
+
+        .funcionario-setor {
+            font-size: 0.85rem;
+            color: var(--text-light);
+        }
+
+        .funcionario-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        /* Badges de Status */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .status-badge.primary {
+            background: rgba(93, 120, 255, 0.1);
+            color: var(--primary-color);
+        }
+
+        .status-badge.success {
+            background: rgba(76, 175, 80, 0.1);
+            color: var(--success-color);
+        }
+
+        .status-badge.warning {
+            background: rgba(255, 152, 0, 0.1);
+            color: var(--warning-color);
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: var(--radius);
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            padding: 15px 20px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .modal-footer {
+            padding: 15px 20px;
+            background: var(--gray-light);
+            border-top: 1px solid var(--gray-medium);
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+
+        /* Responsividade */
+        @media (max-width: 992px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .menu-toggle {
+                display: block;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .grid-2, .grid-3 {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-actions {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+            }
+
+            .secao-item, .funcionario-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            .secao-info, .funcionario-info {
+                width: 100%;
+            }
+
+            .funcionario-actions {
+                width: 100%;
+                justify-content: flex-end;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Menu Lateral -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <i class="fas fa-chart-bar"></i>
+            <h1>Sistema de RH</h1>
+        </div>
+        
+        <!-- Perfil do Usuário -->
+        <div class="user-profile">
+            <div class="user-avatar" id="user-avatar">
+                <!-- Avatar será preenchido via JavaScript -->
+            </div>
+            <div class="user-info">
+                <div class="user-name" id="user-name">Carregando...</div>
+                <div class="user-role" id="user-role">Usuário</div>
+            </div>
+        </div>
+        
+        <!-- Menu de Navegação -->
+        <div class="sidebar-menu">
+            <a href="dashboard.html" class="menu-item">
+                <i class="fas fa-chart-bar"></i>
+                Dashboard
+            </a>
+            <a href="busca.html" class="menu-item">
+                <i class="fas fa-search"></i>
+                Busca
+            </a>
+            <a href="cadastro.html" class="menu-item">
+                <i class="fas fa-user-plus"></i>
+                Cadastro
+            </a>
+            <a href="empresa.html" class="menu-item">
+                <i class="fas fa-building"></i>
+                Empresa
+            </a>
+            <a href="funcionarios.html" class="menu-item">
+                <i class="fas fa-users"></i>
+                Funcionários
+            </a>
+            <a href="funcoes.html" class="menu-item">
+                <i class="fas fa-briefcase"></i>
+                Funções
+            </a>
+            <a href="lideres.html" class="menu-item active">
+                <i class="fas fa-crown"></i>
+                Líderes
+            </a>
+            <a href="listaempresas.html" class="menu-item">
+                <i class="fas fa-list"></i>
+                Lista de Empresas
+            </a>
+            <a href="setores.html" class="menu-item">
+                <i class="fas fa-sitemap"></i>
+                Setores
+            </a>
+            
+            <div class="menu-divider"></div>
+            
+            <a href="#" class="menu-item" id="logout-btn">
+                <i class="fas fa-sign-out-alt"></i>
+                Sair
+            </a>
+        </div>
+    </div>
+
+    <!-- Conteúdo Principal -->
+    <div class="main-content" id="main-content">
+        <!-- Top Header -->
+        <div class="top-header">
+            <div class="page-title">
+                <i class="fas fa-crown"></i>
+                Designação de Líderes
+            </div>
+            <div class="header-actions">
+                <button class="menu-toggle" id="menu-toggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="container">
+            <div id="global-alert"></div>
+            
+            <div class="form-container">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 style="color: white; margin: 0;">Designação de Líderes</h2>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span class="connection-status" id="db-status"></span>
+                            <span id="connection-text" style="color: white;">Conectando...</span>
+                            <button class="btn btn-primary" id="refresh-btn">
+                                <i class="fas fa-sync-alt"></i>
+                                Atualizar
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <!-- Formulário de Designação -->
+                        <div id="form-tab">
+                            <form id="liderForm">
+                                <div class="form-section">
+                                    <div class="section-title">
+                                        <i class="fas fa-user-tie"></i>
+                                        <h3>Seleção do Líder</h3>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="lider">
+                                            <i class="fas fa-crown"></i>
+                                            Líder *
+                                        </label>
+                                        <div class="input-with-icon">
+                                            <i class="fas fa-user input-icon"></i>
+                                            <select id="lider" required>
+                                                <option value="">Selecione o líder</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="info-lider">
+                                            <i class="fas fa-info-circle"></i>
+                                            Informações do Líder Selecionado
+                                        </label>
+                                        <div id="info-lider" style="padding: 12px; background: var(--light-color); border-radius: 8px; min-height: 50px;">
+                                            <div style="text-align: center; color: var(--text-light);">
+                                                <i class="fas fa-user" style="font-size: 24px; margin-bottom: 5px;"></i>
+                                                <p>Selecione um líder para ver suas informações</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-section">
+                                    <div class="section-title">
+                                        <i class="fas fa-sitemap"></i>
+                                        <h3>Designação de Seções</h3>
+                                    </div>
+                                    
+                                    <div class="grid-2">
+                                        <div class="form-group">
+                                            <label for="setor">
+                                                <i class="fas fa-network-wired"></i>
+                                                Seção
+                                            </label>
+                                            <div class="input-with-icon">
+                                                <i class="fas fa-sitemap input-icon"></i>
+                                                <select id="setor">
+                                                    <option value="">Selecione a seção</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="adicionar-setor">
+                                                <i class="fas fa-plus-circle"></i>
+                                                Adicionar Seção
+                                            </label>
+                                            <button type="button" id="adicionar-setor" class="btn btn-primary">
+                                                <i class="fas fa-plus"></i>
+                                                Adicionar
+                                            </button>
+                                            <div style="font-size: 0.8rem; color: var(--text-light); margin-top: 5px;">
+                                                Máximo de 5 seções por líder
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label>
+                                            <i class="fas fa-list"></i>
+                                            Seções Designadas
+                                        </label>
+                                        <div id="secoes-container" class="secoes-container">
+                                            <div style="text-align: center; color: var(--text-light); padding: 20px;">
+                                                <i class="fas fa-sitemap" style="font-size: 24px; margin-bottom: 5px;"></i>
+                                                <p>Nenhuma seção designada</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-section">
+                                    <div class="section-title">
+                                        <i class="fas fa-users"></i>
+                                        <h3>Funcionários das Seções</h3>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label>
+                                            <i class="fas fa-user-friends"></i>
+                                            Funcionários das Seções Designadas
+                                        </label>
+                                        <div id="funcionarios-container" class="funcionarios-list">
+                                            <div style="text-align: center; color: var(--text-light); padding: 20px;">
+                                                <i class="fas fa-users" style="font-size: 24px; margin-bottom: 5px;"></i>
+                                                <p>Selecione seções para visualizar os funcionários</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-section">
+                                    <div class="section-title">
+                                        <i class="fas fa-exchange-alt"></i>
+                                        <h3>Gerenciamento Avançado</h3>
+                                    </div>
+                                    
+                                    <div class="grid-2">
+                                        <div class="form-group">
+                                            <button type="button" class="btn btn-warning" id="btn-mudar-setor" style="width: 100%;">
+                                                <i class="fas fa-exchange-alt"></i>
+                                                Mudar Setor de Funcionário
+                                            </button>
+                                            <div style="font-size: 0.8rem; color: var(--text-light); margin-top: 5px;">
+                                                Alterar o setor de um funcionário específico
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="form-group">
+                                            <button type="button" class="btn btn-warning" id="btn-mudar-lider" style="width: 100%;">
+                                                <i class="fas fa-crown"></i>
+                                                Mudar Líder da Seção
+                                            </button>
+                                            <div style="font-size: 0.8rem; color: var(--text-light); margin-top: 5px;">
+                                                Alterar o líder responsável por uma seção
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-actions">
+                                    <button type="button" class="btn btn-danger" id="limpar-campos">
+                                        <i class="fas fa-broom"></i>
+                                        Limpar Designação
+                                    </button>
+                                    <button type="button" class="btn btn-success" id="salvar-designacao">
+                                        <i class="fas fa-save"></i>
+                                        Salvar Designação
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+    <div class="container">
+        <p>
+            Sistema Desenvolvido por 
+            <a href="https://wa.me/5582999158412" 
+               target="_blank" 
+               style="color: white; text-decoration: underline; font-weight: bold;"
+               onmouseover="this.style.color='#5d78ff'" 
+               onmouseout="this.style.color='white'">
+                Jeferson
+            </a>
+        </p>
+        <p>Análise de dados de RH 2025 - Todos os direitos reservados</p>
+        <p style="font-size: 0.8rem; margin-top: 10px; opacity: 0.8;">
+            <i class="fas fa-mobile-alt"></i> WhatsApp: (82) 99915-8412
+        </p>
+    </div>
+</footer>
+    </div>
+
+    <!-- Modal para mudar setor de funcionário -->
+    <div id="modal-mudar-setor" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 style="margin: 0; color: white;">Mudar Setor do Funcionário</h3>
+                <button class="close-modal" id="close-modal-setor">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="funcionario-mudar">
+                        <i class="fas fa-user"></i>
+                        Funcionário
+                    </label>
+                    <select id="funcionario-mudar" class="detail-input">
+                        <option value="">Selecione um funcionário</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="novo-setor-func">
+                        <i class="fas fa-sitemap"></i>
+                        Novo Setor
+                    </label>
+                    <select id="novo-setor-func" class="detail-input">
+                        <option value="">Selecione o novo setor</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-danger" id="cancelar-mudar-setor">Cancelar</button>
+                <button class="btn btn-success" id="confirmar-mudar-setor">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para mudar líder da seção -->
+    <div id="modal-mudar-lider" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 style="margin: 0; color: white;">Mudar Líder da Seção</h3>
+                <button class="close-modal" id="close-modal-lider">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="secao-mudar">
+                        <i class="fas fa-sitemap"></i>
+                        Seção
+                    </label>
+                    <select id="secao-mudar" class="detail-input">
+                        <option value="">Selecione uma seção</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="novo-lider-secao">
+                        <i class="fas fa-crown"></i>
+                        Novo Líder
+                    </label>
+                    <select id="novo-lider-secao" class="detail-input">
+                        <option value="">Selecione o novo líder</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-danger" id="cancelar-mudar-lider">Cancelar</button>
+                <button class="btn btn-success" id="confirmar-mudar-lider">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // CONFIGURAÇÃO DO SUPABASE
+        const SUPABASE_URL = "https://tmgglppfobyoosfiewoa.supabase.co";
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRtZ2dscHBmb2J5b29zZmlld29hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM3Mjg4NTEsImV4cCI6MjA3OTMwNDg1MX0.DH3IyjnE7zztySzyckKREy5Zlgmg2aJe4TEXIbmFmkA";
+        
+        // Inicializar Supabase
+        window.supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        
+        // Elementos DOM - Menu
+        const dbStatus = document.getElementById('db-status');
+        const connectionText = document.getElementById('connection-text');
+        const menuToggle = document.getElementById('menu-toggle');
+        const sidebar = document.getElementById('sidebar');
+        const globalAlert = document.getElementById('global-alert');
+        const logoutBtn = document.getElementById('logout-btn');
+        const userAvatar = document.getElementById('user-avatar');
+        const userName = document.getElementById('user-name');
+        const userRole = document.getElementById('user-role');
+        
+        // Elementos DOM - Líderes
+        const refreshBtn = document.getElementById('refresh-btn');
+        const liderSelect = document.getElementById('lider');
+        const setorSelect = document.getElementById('setor');
+        const infoLider = document.getElementById('info-lider');
+        const secoesContainer = document.getElementById('secoes-container');
+        const funcionariosContainer = document.getElementById('funcionarios-container');
+        
+        // Modal elements
+        const modalMudarSetor = document.getElementById('modal-mudar-setor');
+        const modalMudarLider = document.getElementById('modal-mudar-lider');
+        const btnMudarSetor = document.getElementById('btn-mudar-setor');
+        const btnMudarLider = document.getElementById('btn-mudar-lider');
+        const funcionarioMudarSelect = document.getElementById('funcionario-mudar');
+        const novoSetorFuncSelect = document.getElementById('novo-setor-func');
+        const secaoMudarSelect = document.getElementById('secao-mudar');
+        const novoLiderSecaoSelect = document.getElementById('novo-lider-secao');
+        const confirmarMudarSetor = document.getElementById('confirmar-mudar-setor');
+        const cancelarMudarSetor = document.getElementById('cancelar-mudar-setor');
+        const confirmarMudarLider = document.getElementById('confirmar-mudar-lider');
+        const cancelarMudarLider = document.getElementById('cancelar-mudar-lider');
+        const closeModalSetor = document.getElementById('close-modal-setor');
+        const closeModalLider = document.getElementById('close-modal-lider');
+
+        // Menu mobile toggle
+        menuToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('active');
+        });
+
+        // Fechar menu ao clicar fora (em telas menores)
+        document.addEventListener('click', (e) => {
+            if (window.innerWidth <= 992 && !sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
+                sidebar.classList.remove('active');
+            }
+        });
+
+        // Variáveis globais
+        let funcionariosLideres = [];  // Funcionários que são líderes
+        let setores = [];
+        let funcionarios = [];          // Todos os funcionários
+        let secoesDesignadas = [];     // Array de objetos {setor_nome: "nome", ordem: 1}
+        let funcionariosPorSecao = {};
+        let currentUser = null;
+
+        // Inicializar a aplicação
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Verificar autenticação primeiro
+            currentUser = await checkAuth();
+            
+            // Se autenticado, inicializar o restante da aplicação
+            if (currentUser) {
+                await initializeApp();
+                setupEventListeners();
+            }
+        });
+
+        // Função para verificar autenticação
+        async function checkAuth() {
+            try {
+                const { data: { session }, error } = await window.supabase.auth.getSession();
+                
+                if (error) {
+                    console.error('Erro ao verificar sessão:', error);
+                    redirectToLogin();
+                    return null;
+                }
+                
+                if (!session) {
+                    console.log('Nenhuma sessão ativa encontrada. Redirecionando para login...');
+                    redirectToLogin();
+                    return null;
+                }
+                
+                return session.user;
+            } catch (error) {
+                console.error('Erro na verificação de autenticação:', error);
+                redirectToLogin();
+                return null;
+            }
+        }
+
+        // Função para redirecionar para login
+        function redirectToLogin() {
+            const currentPath = window.location.pathname + window.location.search;
+            sessionStorage.setItem('redirectAfterLogin', currentPath);
+            window.location.href = 'index.html';
+        }
+
+        // Função para carregar perfil do usuário
+        async function loadUserProfile(userId) {
+            try {
+                const { data, error } = await window.supabase
+                    .from('profiles')
+                    .select('nome, funcao, avatar_url')
+                    .eq('id', userId)
+                    .single();
+                    
+                if (error) {
+                    console.error('Erro ao carregar perfil do usuário:', error);
+                    const userData = await window.supabase.auth.getUser();
+                    return {
+                        id: userId,
+                        email: userData.data.user?.email || 'Usuário',
+                        nome: userData.data.user?.email?.split('@')[0] || 'Usuário',
+                        funcao: 'Usuário',
+                        avatar: null
+                    };
+                } else {
+                    const userData = await window.supabase.auth.getUser();
+                    return {
+                        id: userId,
+                        email: userData.data.user?.email || 'Usuário',
+                        nome: data.nome || userData.data.user?.email?.split('@')[0] || 'Usuário',
+                        funcao: data.funcao || 'Usuário',
+                        avatar: data.avatar_url
+                    };
+                }
+            } catch (error) {
+                console.error('Erro ao carregar perfil:', error);
+                const userData = await window.supabase.auth.getUser();
+                return {
+                    id: userId,
+                    email: userData.data.user?.email || 'Usuário',
+                    nome: userData.data.user?.email?.split('@')[0] || 'Usuário',
+                    funcao: 'Usuário',
+                    avatar: null
+                };
+            }
+        }
+
+        // Função para atualizar perfil do usuário na interface
+        function updateUserProfile(userProfile) {
+            if (!userProfile) return;
+
+            if (userName) userName.textContent = userProfile.nome;
+            if (userRole) userRole.textContent = userProfile.funcao;
+            
+            if (userAvatar) {
+                const initials = userProfile.nome.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+                if (userProfile.avatar) {
+                    userAvatar.innerHTML = `<img src="${userProfile.avatar}" alt="${userProfile.nome}">`;
+                } else {
+                    userAvatar.innerHTML = initials;
+                }
+            }
+        }
+
+        // Função para fazer logout
+        async function logout() {
+            try {
+                const { error } = await window.supabase.auth.signOut();
+                if (error) {
+                    console.error('Erro ao fazer logout:', error);
+                    showAlert('Erro ao fazer logout. Tente novamente.', 'error');
+                } else {
+                    console.log('Logout realizado com sucesso');
+                    showAlert('Logout realizado com sucesso!', 'success');
+                    setTimeout(() => {
+                        redirectToLogin();
+                    }, 1000);
+                }
+            } catch (error) {
+                console.error('Erro no logout:', error);
+                showAlert('Erro ao fazer logout. Tente novamente.', 'error');
+            }
+        }
+
+        // Função para inicializar a aplicação
+        async function initializeApp() {
+            updateConnectionStatus('Conectando ao Banco de Dados...', 'disconnected');
+            
+            try {
+                // Carregar perfil do usuário
+                const userProfile = await loadUserProfile(currentUser.id);
+                updateUserProfile(userProfile);
+                
+                // Testar conexão com o Supabase
+                const { data, error } = await window.supabase
+                    .from('funcionarios')
+                    .select('count')
+                    .limit(1);
+                
+                if (error) {
+                    throw error;
+                }
+                
+                updateConnectionStatus('Conectado ao Banco de Dados', 'connected');
+                showAlert('Conexão estabelecida com o banco de dados!', 'success');
+                
+                // Carregar dados iniciais
+                await loadAllData();
+                
+            } catch (error) {
+                console.error('Erro ao conectar com o Banco de Dados:', error);
+                updateConnectionStatus('Erro na conexão', 'disconnected');
+                showAlert(`Não foi possível conectar ao banco de dados: ${error.message}`, 'error');
+            }
+        }
+
+        // Função para atualizar o status da conexão
+        function updateConnectionStatus(text, status) {
+            connectionText.textContent = text;
+            dbStatus.className = 'connection-status ' + status;
+        }
+
+        // Função para carregar todos os dados do Supabase
+        async function loadAllData() {
+            try {
+                // Carregar funcionários que são líderes, setores e todos os funcionários
+                await Promise.all([
+                    loadFuncionariosLideres(),
+                    loadSetores(),
+                    loadTodosFuncionarios()
+                ]);
+                
+                populateDropdowns();
+                populateModalDropdowns();
+                
+            } catch (error) {
+                console.error('Erro ao carregar dados:', error);
+                showAlert(`Erro ao carregar dados: ${error.message}`, 'error');
+            }
+        }
+
+        // Função para carregar funcionários que são líderes
+        async function loadFuncionariosLideres() {
+            try {
+                // Buscar funcionários que são líderes (is_lider = true)
+                const { data, error } = await window.supabase
+                    .from('funcionarios')
+                    .select('*')
+                    .eq('is_lider', true)
+                    .order('nome');
+                
+                if (error) throw new Error('Erro ao carregar líderes: ' + error.message);
+                
+                funcionariosLideres = data || [];
+                
+            } catch (error) {
+                console.error('Erro ao carregar funcionários líderes:', error);
+                throw error;
+            }
+        }
+
+        // Função para carregar setores
+        async function loadSetores() {
+            try {
+                const { data, error } = await window.supabase
+                    .from('setores')
+                    .select('*')
+                    .order('nome');
+                
+                if (error) throw new Error('Erro ao carregar setores: ' + error.message);
+                
+                setores = data || [];
+                
+            } catch (error) {
+                console.error('Erro ao carregar setores:', error);
+                throw error;
+            }
+        }
+
+        // Função para carregar todos os funcionários
+        async function loadTodosFuncionarios() {
+            try {
+                // Buscar todos os funcionários para mostrar por setor
+                const { data, error } = await window.supabase
+                    .from('funcionarios')
+                    .select('*')
+                    .order('nome');
+                
+                if (error) throw new Error('Erro ao carregar funcionários: ' + error.message);
+                
+                funcionarios = data || [];
+                // Agrupar funcionários por setor
+                agruparFuncionariosPorSetor();
+                
+            } catch (error) {
+                console.error('Erro ao carregar funcionários:', error);
+                throw error;
+            }
+        }
+
+        // Função para agrupar funcionários por setor
+        function agruparFuncionariosPorSetor() {
+            funcionariosPorSecao = {};
+            
+            funcionarios.forEach(funcionario => {
+                // Usar o campo setor do funcionário
+                const setorNome = funcionario.setor || 'Não definido';
+                
+                if (!funcionariosPorSecao[setorNome]) {
+                    funcionariosPorSecao[setorNome] = [];
+                }
+                funcionariosPorSecao[setorNome].push(funcionario);
+            });
+        }
+
+        // Função para popular dropdowns principais
+        function populateDropdowns() {
+            // Popular dropdown de líderes (funcionários com is_lider = true)
+            liderSelect.innerHTML = '<option value="">Selecione o líder</option>';
+            
+            funcionariosLideres.forEach(lider => {
+                const nome = lider.nome || `Funcionário ${lider.id}`;
+                const matricula = lider.matricula || 'Sem matrícula';
+                const cargo = lider.funcao || 'Sem cargo definido';
+                
+                const option = document.createElement('option');
+                option.value = lider.id;
+                option.textContent = `${nome} - ${cargo}`;
+                option.setAttribute('data-lider', JSON.stringify({
+                    id: lider.id,
+                    nome: nome,
+                    matricula: matricula,
+                    cargo: cargo,
+                    setor: lider.setor || 'Não definido'
+                }));
+                liderSelect.appendChild(option);
+            });
+            
+            // Popular dropdown de setores
+            setorSelect.innerHTML = '<option value="">Selecione a seção</option>';
+            
+            setores.forEach(setor => {
+                const nome = setor.nome;
+                if (nome) {
+                    const option = document.createElement('option');
+                    option.value = nome;
+                    option.textContent = nome;
+                    option.setAttribute('data-setor', JSON.stringify(setor));
+                    setorSelect.appendChild(option);
+                }
+            });
+        }
+
+        // Função para popular dropdowns dos modais
+        function populateModalDropdowns() {
+            // Popular dropdown de funcionários para mudança de setor
+            funcionarioMudarSelect.innerHTML = '<option value="">Selecione um funcionário</option>';
+            funcionarios.forEach(funcionario => {
+                const nome = funcionario.nome || `Funcionário ${funcionario.id}`;
+                const matricula = funcionario.matricula || 'Sem matrícula';
+                const setorAtual = funcionario.setor || 'Não definido';
+                
+                const option = document.createElement('option');
+                option.value = funcionario.id;
+                option.textContent = `${nome} (${matricula}) - ${setorAtual}`;
+                funcionarioMudarSelect.appendChild(option);
+            });
+            
+            // Popular dropdown de novos setores
+            novoSetorFuncSelect.innerHTML = '<option value="">Selecione o novo setor</option>';
+            setores.forEach(setor => {
+                const nome = setor.nome;
+                if (nome) {
+                    const option = document.createElement('option');
+                    option.value = nome;
+                    option.textContent = nome;
+                    novoSetorFuncSelect.appendChild(option);
+                }
+            });
+            
+            // Popular dropdown de seções para mudança de líder
+            secaoMudarSelect.innerHTML = '<option value="">Selecione uma seção</option>';
+            setores.forEach(setor => {
+                const nome = setor.nome;
+                if (nome) {
+                    const option = document.createElement('option');
+                    option.value = nome;
+                    option.textContent = nome;
+                    secaoMudarSelect.appendChild(option);
+                }
+            });
+            
+            // Popular dropdown de novos líderes
+            novoLiderSecaoSelect.innerHTML = '<option value="">Selecione o novo líder</option>';
+            funcionariosLideres.forEach(lider => {
+                const nome = lider.nome || `Funcionário ${lider.id}`;
+                const matricula = lider.matricula || 'Sem matrícula';
+                
+                const option = document.createElement('option');
+                option.value = lider.id;
+                option.textContent = `${nome} - ${matricula}`;
+                novoLiderSecaoSelect.appendChild(option);
+            });
+        }
+
+        // Função para configurar event listeners
+        function setupEventListeners() {
+            // Logout
+            logoutBtn.addEventListener('click', logout);
+            
+            // Botão de atualizar
+            refreshBtn.addEventListener('click', loadAllData);
+            
+            // Seleção de líder
+            liderSelect.addEventListener('change', async function() {
+                const selectedOption = this.options[this.selectedIndex];
+                if (selectedOption.value) {
+                    const lider = JSON.parse(selectedOption.getAttribute('data-lider'));
+                    await mostrarInfoLiderELiderSecoes(lider.id);
+                } else {
+                    limparInfoLider();
+                }
+            });
+            
+            // Adicionar seção
+            document.getElementById('adicionar-setor').addEventListener('click', adicionarSecao);
+            
+            // Salvar designação
+            document.getElementById('salvar-designacao').addEventListener('click', salvarDesignacao);
+            
+            // Limpar campos
+            document.getElementById('limpar-campos').addEventListener('click', limparCampos);
+            
+            // Modal - Mudar Setor
+            btnMudarSetor.addEventListener('click', () => {
+                modalMudarSetor.style.display = 'flex';
+            });
+            
+            closeModalSetor.addEventListener('click', () => {
+                modalMudarSetor.style.display = 'none';
+            });
+            
+            cancelarMudarSetor.addEventListener('click', () => {
+                modalMudarSetor.style.display = 'none';
+            });
+            
+            confirmarMudarSetor.addEventListener('click', mudarSetorFuncionario);
+            
+            // Modal - Mudar Líder
+            btnMudarLider.addEventListener('click', () => {
+                modalMudarLider.style.display = 'flex';
+            });
+            
+            closeModalLider.addEventListener('click', () => {
+                modalMudarLider.style.display = 'none';
+            });
+            
+            cancelarMudarLider.addEventListener('click', () => {
+                modalMudarLider.style.display = 'none';
+            });
+            
+            confirmarMudarLider.addEventListener('click', mudarLiderSecao);
+            
+            // Fechar modais ao clicar fora
+            window.addEventListener('click', (event) => {
+                if (event.target === modalMudarSetor) {
+                    modalMudarSetor.style.display = 'none';
+                }
+                if (event.target === modalMudarLider) {
+                    modalMudarLider.style.display = 'none';
+                }
+            });
+        }
+
+        // Função para mostrar informações do líder e suas seções atuais
+        async function mostrarInfoLiderELiderSecoes(liderId) {
+            try {
+                // Buscar informações do líder
+                const { data: liderData, error: liderError } = await window.supabase
+                    .from('funcionarios')
+                    .select('*')
+                    .eq('id', liderId)
+                    .single();
+                
+                if (liderError) throw new Error('Erro ao carregar informações do líder: ' + liderError.message);
+                
+                // Verificar se o líder tem seções designadas
+                let secoesLider = [];
+                if (liderData.secoes_lider) {
+                    // secoes_lider é um array JSON no banco de dados
+                    if (Array.isArray(liderData.secoes_lider)) {
+                        secoesLider = liderData.secoes_lider;
+                    } else if (typeof liderData.secoes_lider === 'string') {
+                        try {
+                            secoesLider = JSON.parse(liderData.secoes_lider);
+                        } catch (e) {
+                            secoesLider = liderData.secoes_lider.split(',').map(s => s.trim());
+                        }
+                    }
+                }
+                
+                // Transformar para o formato que usamos
+                secoesDesignadas = secoesLider.map((setorNome, index) => ({
+                    setor_nome: setorNome,
+                    ordem: index + 1
+                }));
+                
+                // Atualizar a visualização
+                atualizarSecoesDesignadas();
+                atualizarFuncionariosSecoes();
+                
+                // Mostrar informações do líder
+                const nome = liderData.nome || `Funcionário ${liderData.id}`;
+                const matricula = liderData.matricula || 'Não informada';
+                const cargo = liderData.funcao || 'Não informado';
+                const setor = liderData.setor || 'Não definido';
+                const isLider = liderData.is_lider ? 'Sim' : 'Não';
+                
+                let html = `
+                    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">
+                        <div style="width: 60px; height: 60px; border-radius: 50%; background: var(--primary-color); display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-crown" style="color: white; font-size: 24px;"></i>
+                        </div>
+                        <div>
+                            <div style="font-weight: bold; font-size: 1.2rem; color: var(--primary-color);">${nome}</div>
+                            <div>${cargo}</div>
+                        </div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
+                        <div><strong>Matrícula:</strong> ${matricula}</div>
+                        <div><strong>Setor Atual:</strong> ${setor}</div>
+                        <div><strong>É Líder:</strong> ${isLider}</div>
+                    </div>
+                `;
+                
+                // Adicionar informações das seções atuais
+                if (secoesDesignadas.length > 0) {
+                    html += `
+                        <div style="margin-top: 15px;">
+                            <div style="font-weight: bold; color: var(--primary-color); margin-bottom: 8px;">Seções Designadas:</div>
+                            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                                ${secoesDesignadas.map(secao => 
+                                    `<span style="background: var(--light-color); padding: 4px 10px; border-radius: 20px; font-size: 0.9rem; border: 1px solid var(--gray-medium);">
+                                        ${secao.setor_nome} ${secao.ordem ? `(#${secao.ordem})` : ''}
+                                    </span>`
+                                ).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                infoLider.innerHTML = html;
+                
+            } catch (error) {
+                console.error('Erro ao mostrar informações do líder:', error);
+                showAlert(`Erro ao carregar informações do líder: ${error.message}`, 'error');
+            }
+        }
+
+        // Função para limpar informações do líder
+        function limparInfoLider() {
+            infoLider.innerHTML = `
+                <div style="text-align: center; color: var(--text-light);">
+                    <i class="fas fa-user" style="font-size: 24px; margin-bottom: 5px;"></i>
+                    <p>Selecione um líder para ver suas informações</p>
+                </div>
+            `;
+        }
+
+        // Função para adicionar seção
+        function adicionarSecao() {
+            const setorSelecionado = setorSelect.value;
+            const liderSelecionado = liderSelect.value;
+            
+            if (!setorSelecionado) {
+                showAlert('Selecione uma seção para adicionar.', 'error');
+                return;
+            }
+            
+            if (!liderSelecionado) {
+                showAlert('Selecione um líder primeiro.', 'error');
+                return;
+            }
+            
+            // Verificar se já atingiu o limite de 5 seções
+            if (secoesDesignadas.length >= 5) {
+                showAlert('Máximo de 5 seções por líder.', 'error');
+                return;
+            }
+            
+            // Verificar se a seção já foi adicionada
+            if (secoesDesignadas.some(secao => secao.setor_nome === setorSelecionado)) {
+                showAlert('Esta seção já foi adicionada.', 'error');
+                return;
+            }
+            
+            // Adicionar seção à lista
+            secoesDesignadas.push({
+                setor_nome: setorSelecionado,
+                ordem: secoesDesignadas.length + 1
+            });
+            
+            // Atualizar a visualização das seções
+            atualizarSecoesDesignadas();
+            
+            // Atualizar a lista de funcionários
+            atualizarFuncionariosSecoes();
+            
+            // Limpar seleção
+            setorSelect.value = '';
+        }
+
+        // Função para atualizar seções designadas
+        function atualizarSecoesDesignadas() {
+            if (secoesDesignadas.length === 0) {
+                secoesContainer.innerHTML = `
+                    <div style="text-align: center; color: var(--text-light); padding: 20px;">
+                        <i class="fas fa-sitemap" style="font-size: 24px; margin-bottom: 5px;"></i>
+                        <p>Nenhuma seção designada</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = '';
+            
+            secoesDesignadas.forEach((secao, index) => {
+                const funcionariosSetor = funcionariosPorSecao[secao.setor_nome] || [];
+                
+                html += `
+                    <div class="secao-item">
+                        <div class="secao-info">
+                            <div>
+                                <div class="secao-nome">${secao.setor_nome} <small>(Ordem: ${secao.ordem})</small></div>
+                                <div class="secao-funcionarios">
+                                    ${funcionariosSetor.length > 0 ? 
+                                        `<span>${funcionariosSetor.length} funcionário(s) neste setor</span>` : 
+                                        '<span style="color: var(--text-light);">Nenhum funcionário no setor</span>'
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" class="remove-secao" data-index="${index}">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                `;
+            });
+            
+            secoesContainer.innerHTML = html;
+            
+            // Adicionar eventos para remover seções
+            document.querySelectorAll('.remove-secao').forEach(button => {
+                button.addEventListener('click', function() {
+                    const index = parseInt(this.getAttribute('data-index'));
+                    removerSecao(index);
+                });
+            });
+        }
+
+        // Função para remover seção
+        function removerSecao(index) {
+            secoesDesignadas.splice(index, 1);
+            
+            // Reordenar as ordens
+            secoesDesignadas.forEach((secao, idx) => {
+                secao.ordem = idx + 1;
+            });
+            
+            atualizarSecoesDesignadas();
+            atualizarFuncionariosSecoes();
+        }
+
+        // Função para atualizar funcionários das seções
+        function atualizarFuncionariosSecoes() {
+            if (secoesDesignadas.length === 0) {
+                funcionariosContainer.innerHTML = `
+                    <div style="text-align: center; color: var(--text-light); padding: 20px;">
+                        <i class="fas fa-users" style="font-size: 24px; margin-bottom: 5px;"></i>
+                        <p>Selecione seções para visualizar os funcionários</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Coletar todos os funcionários das seções designadas
+            let funcionariosSecoes = [];
+            
+            secoesDesignadas.forEach(secao => {
+                const funcionariosSetor = funcionariosPorSecao[secao.setor_nome] || [];
+                funcionariosSecoes = funcionariosSecoes.concat(
+                    funcionariosSetor.map(func => ({
+                        ...func, 
+                        setorDesignado: secao.setor_nome,
+                        ordemSetor: secao.ordem
+                    }))
+                );
+            });
+            
+            if (funcionariosSecoes.length === 0) {
+                funcionariosContainer.innerHTML = `
+                    <div style="text-align: center; color: var(--text-light); padding: 20px;">
+                        <i class="fas fa-users" style="font-size: 24px; margin-bottom: 5px;"></i>
+                        <p>Nenhum funcionário nas seções selecionadas</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Ordenar por setor e depois por nome
+            funcionariosSecoes.sort((a, b) => {
+                if (a.ordemSetor !== b.ordemSetor) {
+                    return a.ordemSetor - b.ordemSetor;
+                }
+                return (a.nome || '').localeCompare(b.nome || '');
+            });
+            
+            let html = '';
+            
+            funcionariosSecoes.forEach(funcionario => {
+                const nome = funcionario.nome || `Funcionário ${funcionario.id}`;
+                const cargo = funcionario.funcao || 'Não informado';
+                const matricula = funcionario.matricula || 'Não informada';
+                const isLider = funcionario.is_lider ? '<span class="status-badge success">Líder</span>' : '';
+                
+                html += `
+                    <div class="funcionario-item">
+                        <div class="funcionario-info">
+                            <div>
+                                <div class="funcionario-nome">${nome} ${isLider}</div>
+                                <div class="funcionario-setor">${cargo} | Matrícula: ${matricula}</div>
+                            </div>
+                        </div>
+                        <div class="funcionario-actions">
+                            <span class="status-badge primary">${funcionario.setorDesignado}</span>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            funcionariosContainer.innerHTML = html;
+        }
+
+        // Função para salvar designação
+        async function salvarDesignacao() {
+            const btn = document.getElementById('salvar-designacao');
+            const originalText = btn.innerHTML;
+            
+            try {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
+                
+                const liderSelecionado = liderSelect.value;
+                
+                if (!liderSelecionado) {
+                    throw new Error('Selecione um líder para designar as seções.');
+                }
+                
+                if (secoesDesignadas.length === 0) {
+                    throw new Error('Adicione pelo menos uma seção para designar ao líder.');
+                }
+                
+                const liderId = parseInt(liderSelecionado);
+                
+                // Preparar array de seções para salvar
+                const secoesArray = secoesDesignadas.map(secao => secao.setor_nome);
+                
+                // Atualizar o funcionário (líder) com as novas seções
+                const { data, error } = await window.supabase
+                    .from('funcionarios')
+                    .update({ 
+                        secoes_lider: secoesArray,
+                        data_atualizacao: new Date().toISOString()
+                    })
+                    .eq('id', liderId)
+                    .select();
+                
+                if (error) {
+                    throw new Error('Erro ao salvar designação: ' + error.message);
+                }
+                
+                showAlert('Designação salva com sucesso!', 'success');
+                
+                // Atualizar informações do líder para mostrar seções atualizadas
+                await mostrarInfoLiderELiderSecoes(liderId);
+                
+            } catch (error) {
+                console.error('Erro ao salvar designação:', error);
+                showAlert(`Erro ao salvar designação: ${error.message}`, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        }
+
+        // Função para mudar setor de um funcionário
+        async function mudarSetorFuncionario() {
+            const funcionarioId = funcionarioMudarSelect.value;
+            const novoSetor = novoSetorFuncSelect.value;
+            
+            if (!funcionarioId || !novoSetor) {
+                showAlert('Selecione um funcionário e um novo setor.', 'error');
+                return;
+            }
+            
+            try {
+                // Atualizar o setor do funcionário
+                const { data, error } = await window.supabase
+                    .from('funcionarios')
+                    .update({ 
+                        setor: novoSetor,
+                        data_atualizacao: new Date().toISOString()
+                    })
+                    .eq('id', funcionarioId)
+                    .select();
+                
+                if (error) {
+                    throw new Error('Erro ao mudar setor: ' + error.message);
+                }
+                
+                showAlert('Setor do funcionário atualizado com sucesso!', 'success');
+                
+                // Fechar modal
+                modalMudarSetor.style.display = 'none';
+                
+                // Recarregar dados
+                await loadAllData();
+                
+                // Se estiver visualizando um líder, atualizar as informações
+                if (liderSelect.value) {
+                    await mostrarInfoLiderELiderSecoes(liderSelect.value);
+                }
+                
+                // Limpar campos do modal
+                funcionarioMudarSelect.value = '';
+                novoSetorFuncSelect.value = '';
+                
+            } catch (error) {
+                console.error('Erro ao mudar setor:', error);
+                showAlert(`Erro ao mudar setor: ${error.message}`, 'error');
+            }
+        }
+
+        // Função para mudar líder de uma seção
+        async function mudarLiderSecao() {
+            const secaoNome = secaoMudarSelect.value;
+            const novoLiderId = novoLiderSecaoSelect.value;
+            
+            if (!secaoNome || !novoLiderId) {
+                showAlert('Selecione uma seção e um novo líder.', 'error');
+                return;
+            }
+            
+            try {
+                // Verificar se o novo líder já é líder
+                const novoLider = funcionariosLideres.find(l => l.id == novoLiderId);
+                if (!novoLider) {
+                    throw new Error('O funcionário selecionado não é um líder.');
+                }
+                
+                // 1. Atualizar o líder atual da seção (remover seções_lider se estiver nela)
+                const funcionariosNaSecao = funcionarios.filter(f => f.setor === secaoNome);
+                
+                // Encontrar o líder atual da seção (se houver)
+                const liderAtual = funcionariosLideres.find(l => 
+                    l.secoes_lider && 
+                    (Array.isArray(l.secoes_lider) ? l.secoes_lider.includes(secaoNome) : false)
+                );
+                
+                if (liderAtual) {
+                    // Remover a seção do líder atual
+                    let secoesAtualizadas = [];
+                    if (Array.isArray(liderAtual.secoes_lider)) {
+                        secoesAtualizadas = liderAtual.secoes_lider.filter(s => s !== secaoNome);
+                    }
+                    
+                    const { error: errorRemover } = await window.supabase
+                        .from('funcionarios')
+                        .update({ 
+                            secoes_lider: secoesAtualizadas,
+                            data_atualizacao: new Date().toISOString()
+                        })
+                        .eq('id', liderAtual.id);
+                    
+                    if (errorRemover) {
+                        console.warn('Erro ao remover seção do líder atual:', errorRemover);
+                    }
+                }
+                
+                // 2. Adicionar a seção ao novo líder
+                let secoesNovoLider = [];
+                if (novoLider.secoes_lider) {
+                    if (Array.isArray(novoLider.secoes_lider)) {
+                        secoesNovoLider = [...novoLider.secoes_lider, secaoNome];
+                    } else if (typeof novoLider.secoes_lider === 'string') {
+                        try {
+                            secoesNovoLider = JSON.parse(novoLider.secoes_lider);
+                            secoesNovoLider.push(secaoNome);
+                        } catch (e) {
+                            secoesNovoLider = [secaoNome];
+                        }
+                    }
+                } else {
+                    secoesNovoLider = [secaoNome];
+                }
+                
+                const { error: errorAdicionar } = await window.supabase
+                    .from('funcionarios')
+                    .update({ 
+                        secoes_lider: secoesNovoLider,
+                        data_atualizacao: new Date().toISOString()
+                    })
+                    .eq('id', novoLiderId);
+                
+                if (errorAdicionar) {
+                    throw new Error('Erro ao adicionar seção ao novo líder: ' + errorAdicionar.message);
+                }
+                
+                // 3. Atualizar o líder_responsavel de todos os funcionários da seção
+                for (const funcionario of funcionariosNaSecao) {
+                    const { error: errorFunc } = await window.supabase
+                        .from('funcionarios')
+                        .update({ 
+                            lider_responsavel: novoLiderId,
+                            data_atualizacao: new Date().toISOString()
+                        })
+                        .eq('id', funcionario.id);
+                    
+                    if (errorFunc) {
+                        console.warn(`Erro ao atualizar líder do funcionário ${funcionario.id}:`, errorFunc);
+                    }
+                }
+                
+                showAlert(`Líder da seção "${secaoNome}" atualizado com sucesso!`, 'success');
+                
+                // Fechar modal
+                modalMudarLider.style.display = 'none';
+                
+                // Recarregar dados
+                await loadAllData();
+                
+                // Se estiver visualizando um líder, atualizar as informações
+                if (liderSelect.value) {
+                    await mostrarInfoLiderELiderSecoes(liderSelect.value);
+                }
+                
+                // Limpar campos do modal
+                secaoMudarSelect.value = '';
+                novoLiderSecaoSelect.value = '';
+                
+            } catch (error) {
+                console.error('Erro ao mudar líder da seção:', error);
+                showAlert(`Erro ao mudar líder da seção: ${error.message}`, 'error');
+            }
+        }
+
+        // Função para limpar campos do formulário
+        function limparCampos() {
+            liderSelect.value = '';
+            setorSelect.value = '';
+            secoesDesignadas = [];
+            limparInfoLider();
+            atualizarSecoesDesignadas();
+            atualizarFuncionariosSecoes();
+        }
+
+        // Funções auxiliares
+        function showAlert(message, type) {
+            // Limpar alertas anteriores
+            globalAlert.innerHTML = '';
+            
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.innerHTML = `
+                <i class="fas fa-${type === 'error' ? 'exclamation-triangle' : type === 'success' ? 'check-circle' : 'info-circle'}"></i>
+                <span>${message}</span>
+            `;
+            
+            globalAlert.appendChild(alertDiv);
+            
+            // Remover após 5 segundos (exceto para errors)
+            if (type !== 'error') {
+                setTimeout(() => {
+                    alertDiv.remove();
+                }, 5000);
+            }
+        }
+    </script>
+</body>
+</html>

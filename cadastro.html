@@ -1,0 +1,2953 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Cadastro - RH</title>
+    <link rel="shortcut icon" href="data:image/x-icon;," type="image/x-icon">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --primary-color: #5d78ff;
+            --secondary-color: #8a9bff;
+            --accent-color: #ff6b8b;
+            --success-color: #4caf50;
+            --warning-color: #ff9800;
+            --error-color: #f44336;
+            --light-color: #f8f9ff;
+            --dark-color: #2d3748;
+            --gray-light: #f1f3f9;
+            --gray-medium: #e2e8f0;
+            --text-light: #718096;
+            --text-dark: #2d3748;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+            --radius: 12px;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7ff 0%, #e6eeff 100%);
+            color: var(--text-dark);
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+        }
+
+        /* Menu Lateral */
+        .sidebar {
+            width: 280px;
+            background: white;
+            box-shadow: var(--shadow);
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            overflow-y: auto;
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--gray-medium);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sidebar-header h1 {
+            font-size: 1.3rem;
+            color: var(--primary-color);
+        }
+
+        .user-profile {
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            border-bottom: 1px solid var(--gray-medium);
+        }
+
+        .user-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .user-avatar img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .user-info {
+            flex: 1;
+        }
+
+        .user-name {
+            font-weight: 600;
+            font-size: 16px;
+            color: var(--text-dark);
+        }
+
+        .user-role {
+            font-size: 14px;
+            color: var(--text-light);
+        }
+
+        .sidebar-menu {
+            padding: 15px 0;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 20px;
+            color: var(--text-dark);
+            text-decoration: none;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .menu-item:hover {
+            background-color: var(--light-color);
+            color: var(--primary-color);
+        }
+
+        .menu-item.active {
+            background-color: var(--light-color);
+            color: var(--primary-color);
+            border-right: 3px solid var(--primary-color);
+        }
+
+        .menu-item i {
+            width: 20px;
+            text-align: center;
+        }
+
+        .menu-divider {
+            height: 1px;
+            background-color: var(--gray-medium);
+            margin: 10px 20px;
+        }
+
+        /* Conteúdo Principal */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            transition: all 0.3s;
+        }
+
+        .top-header {
+            background: white;
+            border-radius: 0 0 var(--radius) var(--radius);
+            padding: 15px 25px;
+            box-shadow: var(--shadow);
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .page-title {
+            font-size: 1.5rem;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--primary-color);
+            cursor: pointer;
+        }
+        
+        /* Restante do CSS do cadastro */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .form-container {
+            background-color: white;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        
+        .form-section {
+            background-color: white;
+            border-radius: var(--radius);
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+            border-left: 4px solid var(--primary-color);
+        }
+        
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            color: var(--primary-color);
+            font-size: 1.1rem;
+        }
+        
+        .section-title i {
+            background-color: var(--light-color);
+            border-radius: 8px;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+            position: relative;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            color: var(--text-dark);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+        }
+        
+        .input-with-icon {
+            position: relative;
+        }
+        
+        .input-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+        
+        input:not([type="file"]):not([type="checkbox"]), select, textarea {
+            width: 100%;
+            padding: 12px 12px 12px 40px;
+            border: 1px solid var(--gray-medium);
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s;
+            background-color: var(--light-color);
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--primary-color);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(93, 120, 255, 0.2);
+            background-color: white;
+        }
+        
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(93, 120, 255, 0.3);
+        }
+        
+        .btn-success {
+            background-color: var(--success-color);
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background-color: #3d8b40;
+        }
+        
+        .btn-danger {
+            background-color: var(--error-color);
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background-color: #d32f2f;
+        }
+        
+        .btn-warning {
+            background-color: var(--warning-color);
+            color: white;
+        }
+        
+        .btn-warning:hover {
+            background-color: #f57c00;
+        }
+        
+        .btn-sm {
+            padding: 8px 12px;
+            font-size: 12px;
+        }
+        
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 25px;
+            flex-wrap: wrap;
+        }
+        
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+        }
+
+        .card {
+            background: white;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
+            overflow: hidden;
+            border-left: 4px solid var(--primary-color);
+        }
+        
+        .card-header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            padding: 15px 20px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .card-body {
+            padding: 20px;
+        }
+
+        .connection-status {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+        
+        .connected {
+            background-color: var(--success-color);
+        }
+        
+        .disconnected {
+            background-color: var(--error-color);
+        }
+
+        .alert {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+        }
+        
+        .alert-error {
+            background-color: #fff5f5;
+            color: var(--error-color);
+            border: 1px solid #fed7d7;
+        }
+        
+        .alert-success {
+            background-color: #f0fff4;
+            color: var(--success-color);
+            border: 1px solid #c6f6d5;
+        }
+        
+        .alert-info {
+            background-color: #e6f3ff;
+            color: var(--primary-color);
+            border: 1px solid #b3d9ff;
+        }
+
+        footer {
+            background-color: var(--dark-color);
+            color: white;
+            text-align: center;
+            padding: 20px 0;
+            margin-top: 40px;
+            border-radius: var(--radius) var(--radius) 0 0;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-light);
+        }
+        
+        .loading i {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        /* Preview Section */
+        .preview-section {
+            background: white;
+            border-radius: var(--radius);
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+            border-left: 4px solid var(--accent-color);
+        }
+
+        .preview-card {
+            background: var(--light-color);
+            border-radius: var(--radius);
+            padding: 20px;
+            margin-top: 15px;
+            border: 1px solid var(--gray-medium);
+        }
+
+        .preview-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--gray-medium);
+        }
+
+        .preview-photo {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid var(--primary-color);
+        }
+
+        .preview-name {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 5px;
+        }
+
+        .preview-position {
+            font-size: 1rem;
+            color: var(--text-dark);
+        }
+
+        .preview-section-title {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin: 15px 0 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid var(--gray-light);
+        }
+
+        .preview-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .preview-item {
+            margin-bottom: 8px;
+        }
+
+        .preview-label {
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-right: 8px;
+            display: inline-block;
+            min-width: 140px;
+        }
+
+        .preview-value {
+            color: var(--text-dark);
+        }
+
+        .file-input-container {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .file-input {
+            position: absolute;
+            left: -9999px;
+        }
+
+        .file-input-label {
+            display: block;
+            padding: 12px 20px;
+            background: var(--light-color);
+            border: 2px dashed var(--gray-medium);
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: var(--text-light);
+        }
+
+        .file-input-label:hover {
+            border-color: var(--primary-color);
+            background: rgba(93, 120, 255, 0.05);
+            color: var(--primary-color);
+        }
+
+        .file-info {
+            margin-top: 8px;
+            font-size: 0.8rem;
+            color: var(--text-light);
+        }
+
+        .file-info.success {
+            color: var(--success-color);
+        }
+
+        .file-info.error {
+            color: var(--error-color);
+        }
+
+        /* Toggle Switch Styles */
+        .toggle-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .toggle-group {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            background: var(--light-color);
+            border-radius: var(--radius);
+            transition: all 0.3s;
+        }
+
+        .toggle-group.active {
+            background: rgba(93, 120, 255, 0.1);
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .toggle-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 0;
+            cursor: pointer;
+            flex: 1;
+        }
+
+        .toggle-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--gray-light);
+            color: var(--text-light);
+            transition: all 0.3s;
+        }
+
+        .toggle-group.active .toggle-icon {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .toggle-text {
+            flex: 1;
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 30px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--gray-medium);
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .toggle-slider {
+            background-color: var(--primary-color);
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(30px);
+        }
+
+        .toggle-description {
+            font-size: 0.85rem;
+            color: var(--text-light);
+            margin-top: 5px;
+            padding-left: 50px;
+        }
+
+        /* Badges de Status */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .status-badge.primary {
+            background: rgba(93, 120, 255, 0.1);
+            color: var(--primary-color);
+        }
+
+        .status-badge.success {
+            background: rgba(76, 175, 80, 0.1);
+            color: var(--success-color);
+        }
+
+        .status-badge.warning {
+            background: rgba(255, 152, 0, 0.1);
+            color: var(--warning-color);
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            width: 100%;
+            background-color: var(--gray-light);
+            border-radius: 10px;
+            margin: 15px 0;
+            overflow: hidden;
+            display: none;
+        }
+
+        .progress-bar {
+            height: 10px;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            border-radius: 10px;
+            width: 0%;
+            transition: width 0.4s ease;
+        }
+
+        /* Estilos para o select múltiplo de seções - MELHORADO */
+        .multi-select-container {
+            position: relative;
+        }
+
+        .multi-select-wrapper {
+            border: 1px solid var(--gray-medium);
+            border-radius: 8px;
+            background-color: var(--light-color);
+            padding: 10px;
+            transition: all 0.3s;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .multi-select-wrapper:focus-within {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(93, 120, 255, 0.2);
+            background-color: white;
+        }
+
+        .multi-select-option {
+            display: flex;
+            align-items: center;
+            padding: 10px 12px;
+            margin: 4px 0;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+        }
+
+        .multi-select-option:hover {
+            background-color: rgba(93, 120, 255, 0.1);
+        }
+
+        .multi-select-option.selected {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+        }
+
+        .multi-select-checkbox {
+            margin-right: 10px;
+            width: 18px;
+            height: 18px;
+            border-radius: 4px;
+            border: 2px solid var(--gray-medium);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .multi-select-option.selected .multi-select-checkbox {
+            border-color: white;
+            background-color: white;
+            color: var(--primary-color);
+        }
+
+        .multi-select-option.selected .multi-select-checkbox:after {
+            content: "✓";
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .multi-select-label {
+            flex: 1;
+            font-size: 14px;
+        }
+
+        .multi-select-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--gray-medium);
+        }
+
+        .multi-select-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .multi-select-counter {
+            font-size: 0.85rem;
+            color: var(--text-light);
+            background: var(--gray-light);
+            padding: 4px 10px;
+            border-radius: 20px;
+        }
+
+        /* Responsividade */
+        @media (max-width: 992px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .menu-toggle {
+                display: block;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .grid-2, .grid-3 {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-actions {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+            }
+
+            .preview-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .preview-header {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .toggle-group {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            .toggle-label {
+                width: 100%;
+            }
+
+            .multi-select-actions {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Menu Lateral -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <i class="fas fa-chart-bar"></i>
+            <h1>Sistema de RH</h1>
+        </div>
+        
+        <!-- Perfil do Usuário -->
+        <div class="user-profile">
+            <div class="user-avatar" id="user-avatar">
+                <!-- Avatar será preenchido via JavaScript -->
+            </div>
+            <div class="user-info">
+                <div class="user-name" id="user-name">Carregando...</div>
+                <div class="user-role" id="user-role">Usuário</div>
+            </div>
+        </div>
+        
+        <!-- Menu de Navegação -->
+        <div class="sidebar-menu">
+            <a href="dashboard.html" class="menu-item">
+                <i class="fas fa-chart-bar"></i>
+                Dashboard
+            </a>
+            <a href="busca.html" class="menu-item">
+                <i class="fas fa-search"></i>
+                Busca
+            </a>
+            <a href="cadastro.html" class="menu-item active">
+                <i class="fas fa-user-plus"></i>
+                Cadastro
+            </a>
+            <a href="empresa.html" class="menu-item">
+                <i class="fas fa-building"></i>
+                Empresa
+            </a>
+            <a href="funcionarios.html" class="menu-item">
+                <i class="fas fa-users"></i>
+                Funcionários
+            </a>
+            <a href="funcoes.html" class="menu-item">
+                <i class="fas fa-briefcase"></i>
+                Funções
+            </a>
+            <a href="lideres.html" class="menu-item">
+                <i class="fas fa-crown"></i>
+                Líderes
+            </a>
+            <a href="listaempresas.html" class="menu-item">
+                <i class="fas fa-list"></i>
+                Lista de Empresas
+            </a>
+            <a href="setores.html" class="menu-item">
+                <i class="fas fa-sitemap"></i>
+                Setores
+            </a>
+            
+            <div class="menu-divider"></div>
+            
+            <a href="#" class="menu-item" id="logout-btn">
+                <i class="fas fa-sign-out-alt"></i>
+                Sair
+            </a>
+        </div>
+    </div>
+
+    <!-- Conteúdo Principal -->
+    <div class="main-content" id="main-content">
+        <!-- Top Header -->
+        <div class="top-header">
+            <div class="page-title">
+                <i class="fas fa-user-plus"></i>
+                Cadastro de Funcionários
+            </div>
+            <div class="header-actions">
+                <button class="menu-toggle" id="menu-toggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="container">
+            <div id="global-alert"></div>
+            
+            <!-- Barra de Progresso para operações demoradas -->
+            <div class="progress-container" id="progress-container">
+                <div class="progress-bar" id="progress-bar"></div>
+                <div style="text-align: center; margin-top: 5px; color: var(--text-light); font-size: 0.8rem;" id="progress-text">
+                    Aguardando resposta do servidor...
+                </div>
+            </div>
+            
+            <div class="form-container">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 style="color: white; margin: 0;">Cadastro de Funcionários</h2>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span class="connection-status" id="db-status"></span>
+                            <span id="connection-text" style="color: white;">Conectando...</span>
+                            <button class="btn btn-primary" id="refresh-btn">
+                                <i class="fas fa-sync-alt"></i>
+                                Atualizar
+                            </button>
+                            <button class="btn btn-warning" id="reload-lideres">
+                                <i class="fas fa-sync-alt"></i>
+                                Recarregar Líderes
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <!-- Formulário de Cadastro -->
+                        <div id="form-tab">
+                            <form id="funcionarioForm">
+                                <div class="form-section">
+                                    <div class="section-title">
+                                        <i class="fas fa-user"></i>
+                                        <h3>Dados Pessoais</h3>
+                                    </div>
+                                    
+                                    <div class="grid-2">
+                                        <div class="form-group">
+                                            <label for="nome">
+                                                <i class="fas fa-signature"></i>
+                                                Nome Completo *
+                                            </label>
+                                            <div class="input-with-icon">
+                                                <i class="fas fa-user input-icon"></i>
+                                                <input type="text" id="nome" placeholder="Ex: Maria Silva Santos" required>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="cpf">
+                                                <i class="fas fa-id-card"></i>
+                                                CPF *
+                                            </label>
+                                            <div class="input-with-icon" style="position: relative;">
+                                                <i class="fas fa-credit-card input-icon"></i>
+                                                <input type="text" id="cpf" placeholder="000.000.000-00" required>
+                                                <button type="button" id="consultar-cpf" class="btn btn-primary" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); padding: 5px 10px; font-size: 12px; height: 30px;">
+                                                    <i class="fas fa-search"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="grid-3">
+                                        <div class="form-group">
+                                            <label for="nascimento">
+                                                <i class="fas fa-calendar"></i>
+                                                Data de Nascimento *
+                                            </label>
+                                            <div class="input-with-icon">
+                                                <i class="fas fa-birthday-cake input-icon"></i>
+                                                <input type="text" id="nascimento" placeholder="DD/MM/AAAA" required>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="naturalidade">
+                                                <i class="fas fa-map-marker-alt"></i>
+                                                Naturalidade
+                                            </label>
+                                            <div class="input-with-icon">
+                                                <i class="fas fa-city input-icon"></i>
+                                                <input type="text" id="naturalidade" placeholder="Cidade de nascimento">
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="sexo">
+                                                <i class="fas fa-venus-mars"></i>
+                                                Sexo
+                                            </label>
+                                            <div class="input-with-icon">
+                                                <i class="fas fa-user input-icon"></i>
+                                                <select id="sexo">
+                                                    <option value="">Selecione</option>
+                                                    <option value="F">Feminino</option>
+                                                    <option value="M">Masculino</option>
+                                                    <option value="O">Outro</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="grid-2">
+                                        <div class="form-group">
+                                            <label for="rg">
+                                                <i class="fas fa-address-card"></i>
+                                                RG
+                                            </label>
+                                            <div class="input-with-icon">
+                                                <i class="fas fa-id-card input-icon"></i>
+                                                <input type="text" id="rg" placeholder="Número do RG">
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="pis">
+                                                <i class="fas fa-file-alt"></i>
+                                                PIS
+                                            </label>
+                                            <div class="input-with-icon">
+                                                <i class="fas fa-file-contract input-icon"></i>
+                                                <input type="text" id="pis" placeholder="Número do PIS">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="foto">
+                                            <i class="fas fa-camera"></i>
+                                            Foto do Colaborador (Opcional)
+                                        </label>
+                                        <div class="file-input-container">
+                                            <input type="file" id="foto" class="file-input" accept="image/*">
+                                            <label for="foto" class="file-input-label">
+                                                <i class="fas fa-cloud-upload-alt"></i>
+                                                Clique para selecionar uma foto (JPEG ou PNG, máx. 2MB)
+                                            </label>
+                                        </div>
+                                        <div class="file-info" id="file-info"></div>
+                                        <small style="color: var(--text-light); font-size: 0.8rem;">
+                                            A foto será automaticamente redimensionada se necessário.
+                                        </small>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="tamanho_fardamento">
+                                            <i class="fas fa-tshirt"></i>
+                                            Tamanho do Fardamento (Opcional)
+                                        </label>
+                                        <div class="input-with-icon">
+                                            <i class="fas fa-ruler input-icon"></i>
+                                            <select id="tamanho_fardamento">
+                                                <option value="">Selecione o tamanho</option>
+                                                <option value="PP">PP</option>
+                                                <option value="P">P</option>
+                                                <option value="M">M</option>
+                                                <option value="G">G</option>
+                                                <option value="GG">GG</option>
+                                                <option value="XXG">XXG</option>
+                                                <option value="XCG">XCG</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-section">
+                                    <div class="section-title">
+                                        <i class="fas fa-briefcase"></i>
+                                        <h3>Dados Profissionais</h3>
+                                    </div>
+                                    
+                                    <div class="grid-2">
+                                        <div class="form-group">
+                                            <label for="empresa">
+                                                <i class="fas fa-building"></i>
+                                                Empresa *
+                                            </label>
+                                            <div class="input-with-icon">
+                                                <i class="fas fa-building input-icon"></i>
+                                                <select id="empresa" required>
+                                                    <option value="">Selecione a empresa</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="setor">
+                                                <i class="fas fa-sitemap"></i>
+                                                Setor *
+                                            </label>
+                                            <div class="input-with-icon">
+                                                <i class="fas fa-network-wired input-icon"></i>
+                                                <select id="setor" required>
+                                                    <option value="">Selecione o setor</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="grid-2">
+                                        <div class="form-group">
+                                            <label for="funcao">
+                                                <i class="fas fa-tasks"></i>
+                                                Função *
+                                            </label>
+                                            <div class="input-with-icon">
+                                                <i class="fas fa-user-tie input-icon"></i>
+                                                <select id="funcao" required>
+                                                    <option value="">Selecione a função</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="cbo">
+                                                <i class="fas fa-code"></i>
+                                                CBO
+                                            </label>
+                                            <div class="input-with-icon">
+                                                <i class="fas fa-barcode input-icon"></i>
+                                                <input type="text" id="cbo" readonly>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="grid-3">
+                                        <div class="form-group">
+                                            <label for="matricula">
+                                                <i class="fas fa-id-badge"></i>
+                                                Matrícula *
+                                            </label>
+                                            <div class="input-with-icon">
+                                                <i class="fas fa-id-card input-icon"></i>
+                                                <input type="text" id="matricula" placeholder="Número da matrícula" required>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="admissao">
+                                                <i class="fas fa-calendar-check"></i>
+                                                Data de Admissão *
+                                            </label>
+                                            <div class="input-with-icon">
+                                                <i class="fas fa-calendar input-icon"></i>
+                                                <input type="text" id="admissao" placeholder="DD/MM/AAAA" required>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="salario">
+                                                <i class="fas fa-money-bill-wave"></i>
+                                                Salário
+                                            </label>
+                                            <div class="input-with-icon">
+                                                <i class="fas fa-dollar-sign input-icon"></i>
+                                                <input type="text" id="salario" placeholder="R$ 0,00">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="grid-2">
+                                        <div class="form-group">
+                                            <label for="lider">
+                                                <i class="fas fa-user-friends"></i>
+                                                Líder Responsável
+                                            </label>
+                                            <div class="input-with-icon">
+                                                <i class="fas fa-user-check input-icon"></i>
+                                                <select id="lider">
+                                                    <option value="">Selecione o líder</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div></div> <!-- Espaço vazio para manter o layout do grid -->
+                                    </div>
+                                    
+                                    <!-- Container para Seções do Líder (apenas quando ativado) -->
+                                    <div class="form-group" id="secoes-lider-container" style="display: none;">
+                                        <div class="multi-select-header">
+                                            <label style="margin-bottom: 0;">
+                                                <i class="fas fa-network-wired"></i>
+                                                Seções sob Responsabilidade *
+                                            </label>
+                                            <div class="multi-select-actions">
+                                                <span class="multi-select-counter" id="secoes-counter">0 selecionadas</span>
+                                                <button type="button" class="btn btn-sm btn-primary" id="select-all-secoes">
+                                                    <i class="fas fa-check-double"></i>
+                                                    Selecionar Todas
+                                                </button>
+                                                <button type="button" class="btn btn-sm btn-danger" id="clear-all-secoes">
+                                                    <i class="fas fa-times"></i>
+                                                    Limpar
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="multi-select-wrapper" id="secoes-lider-wrapper">
+                                            <!-- As opções serão preenchidas via JavaScript -->
+                                        </div>
+                                        <small style="color: var(--text-light); font-size: 0.8rem; display: block; margin-top: 8px;">
+                                            Clique para selecionar as seções sob responsabilidade deste líder. Múltiplas seleções são permitidas.
+                                        </small>
+                                    </div>
+                                    
+                                    <!-- Status de Líder Melhorado -->
+                                    <div class="toggle-container">
+                                        <div class="toggle-group" id="lider-toggle-group">
+                                            <label class="toggle-label">
+                                                <div class="toggle-icon">
+                                                    <i class="fas fa-crown"></i>
+                                                </div>
+                                                <div class="toggle-text">
+                                                    Este funcionário é um Líder/Gestor
+                                                    <div class="toggle-description">
+                                                        Ative esta opção se o funcionário possui responsabilidades de liderança sobre outros colaboradores.
+                                                    </div>
+                                                </div>
+                                                <div class="toggle-switch">
+                                                    <input type="checkbox" id="is_lider">
+                                                    <span class="toggle-slider"></span>
+                                                </div>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-section">
+                                    <div class="section-title">
+                                        <i class="fas fa-map-marked-alt"></i>
+                                        <h3>Endereço</h3>
+                                    </div>
+                                    
+                                    <div class="grid-2">
+                                        <div class="form-group">
+                                            <label for="cep">
+                                                <i class="fas fa-map-pin"></i>
+                                                CEP
+                                            </label>
+                                            <div class="input-with-icon" style="position: relative;">
+                                                <i class="fas fa-search-location input-icon"></i>
+                                                <input type="text" id="cep" placeholder="00000-000">
+                                                <button type="button" id="buscar-cep" class="btn btn-primary" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); padding: 5px 10px; font-size: 12px; height: 30px;">
+                                                    <i class="fas fa-search"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="grid-2">
+                                        <div class="form-group">
+                                            <label for="rua">
+                                                <i class="fas fa-road"></i>
+                                                Rua
+                                            </label>
+                                            <div class="input-with-icon">
+                                                <i class="fas fa-map input-icon"></i>
+                                                <input type="text" id="rua">
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="numero">
+                                                <i class="fas fa-hashtag"></i>
+                                                Número (Opcional)
+                                            </label>
+                                            <div class="input-with-icon">
+                                                <i class="fas fa-home input-icon"></i>
+                                                <input type="text" id="numero" placeholder="Número ou S/N">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="grid-3">
+                                        <div class="form-group">
+                                            <label for="bairro">
+                                                <i class="fas fa-map-marker"></i>
+                                                Bairro
+                                            </label>
+                                            <div class="input-with-icon">
+                                                <i class="fas fa-location-arrow input-icon"></i>
+                                                <input type="text" id="bairro">
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="cidade">
+                                                <i class="fas fa-city"></i>
+                                                Cidade
+                                            </label>
+                                            <div class="input-with-icon">
+                                                <i class="fas fa-building input-icon"></i>
+                                                <input type="text" id="cidade">
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="estado">
+                                                <i class="fas fa-flag"></i>
+                                                Estado
+                                            </label>
+                                            <div class="input-with-icon">
+                                                <i class="fas fa-map-signs input-icon"></i>
+                                                <input type="text" id="estado">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="complemento">
+                                            <i class="fas fa-plus-circle"></i>
+                                            Complemento
+                                        </label>
+                                        <div class="input-with-icon">
+                                            <i class="fas fa-home input-icon"></i>
+                                            <input type="text" id="complemento" placeholder="Apartamento, bloco, etc.">
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-section">
+                                    <div class="section-title">
+                                        <i class="fas fa-home"></i>
+                                        <h3>Informações Familiares</h3>
+                                    </div>
+                                    
+                                    <!-- Status de Pai/Mãe Melhorado -->
+                                    <div class="toggle-container">
+                                        <div class="toggle-group" id="pai-mae-toggle-group">
+                                            <label class="toggle-label">
+                                                <div class="toggle-icon">
+                                                    <i class="fas fa-baby"></i>
+                                                </div>
+                                                <div class="toggle-text">
+                                                    É Pai/Mãe
+                                                    <div class="toggle-description">
+                                                        Ative esta opção se o funcionário tem filhos. Isso irá habilitar os campos para informar o número e datas de nascimento dos filhos.
+                                                    </div>
+                                                </div>
+                                                <div class="toggle-switch">
+                                                    <input type="checkbox" id="is_pai_mae">
+                                                    <span class="toggle-slider"></span>
+                                                </div>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="form-group" id="num-filhos-container" style="display: none;">
+                                        <label for="num_filhos">
+                                            <i class="fas fa-child"></i>
+                                            Número de Filhos
+                                        </label>
+                                        <div class="input-with-icon">
+                                            <i class="fas fa-users input-icon"></i>
+                                            <select id="num_filhos">
+                                                <option value="0">0</option>
+                                                <option value="1">1</option>
+                                                <option value="2">2</option>
+                                                <option value="3">3</option>
+                                                <option value="4">4</option>
+                                                <option value="5">5</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    
+                                    <div id="filhos-container">
+                                        <!-- Campos para datas de nascimento dos filhos serão adicionados aqui -->
+                                    </div>
+                                </div>
+
+                                <!-- Pré-visualização -->
+                                <div class="preview-section">
+                                    <div class="section-title">
+                                        <i class="fas fa-eye"></i>
+                                        <h3>Pré-visualização dos Dados</h3>
+                                    </div>
+                                    <div class="preview-card" id="preview-content">
+                                        <div style="text-align: center; color: var(--text-light); padding: 20px;">
+                                            <i class="fas fa-user" style="font-size: 48px; margin-bottom: 10px;"></i>
+                                            <p>Os dados aparecerão aqui conforme você preencher o formulário</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-actions">
+                                    <button type="button" class="btn btn-danger" id="limpar-campos">
+                                        <i class="fas fa-broom"></i>
+                                        Limpar Campos
+                                    </button>
+                                    <button type="button" class="btn btn-success" id="salvar-funcionario">
+                                        <i class="fas fa-save"></i>
+                                        Salvar Funcionário
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+    <div class="container">
+        <p>
+            Sistema Desenvolvido por 
+            <a href="https://wa.me/5582999158412" 
+               target="_blank" 
+               style="color: white; text-decoration: underline; font-weight: bold;"
+               onmouseover="this.style.color='#5d78ff'" 
+               onmouseout="this.style.color='white'">
+                Jeferson
+            </a>
+        </p>
+        <p>Análise de dados de RH 2025 - Todos os direitos reservados</p>
+        <p style="font-size: 0.8rem; margin-top: 10px; opacity: 0.8;">
+            <i class="fas fa-mobile-alt"></i> WhatsApp: (82) 99915-8412
+        </p>
+    </div>
+</footer>
+    </div>
+
+    <script>
+        // Configuração do Supabase
+        const SUPABASE_URL = "https://tmgglppfobyoosfiewoa.supabase.co";
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRtZ2dscHBmb2J5b29zZmlld29hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM3Mjg4NTEsImV4cCI6MjA3OTMwNDg1MX0.DH3IyjnE7zztySzyckKREy5Zlgmg2aJe4TEXIbmFmkA";
+        
+        // Inicializar Supabase
+        window.supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        
+        // Elementos DOM
+        const dbStatus = document.getElementById('db-status');
+        const connectionText = document.getElementById('connection-text');
+        const refreshBtn = document.getElementById('refresh-btn');
+        const reloadLideresBtn = document.getElementById('reload-lideres');
+        const menuToggle = document.getElementById('menu-toggle');
+        const sidebar = document.getElementById('sidebar');
+        const globalAlert = document.getElementById('global-alert');
+        const fotoInput = document.getElementById('foto');
+        const fileInfo = document.getElementById('file-info');
+        const previewContent = document.getElementById('preview-content');
+        const isPaiMaeToggle = document.getElementById('is_pai_mae');
+        const isLiderToggle = document.getElementById('is_lider');
+        const paiMaeToggleGroup = document.getElementById('pai-mae-toggle-group');
+        const liderToggleGroup = document.getElementById('lider-toggle-group');
+        const numFilhosContainer = document.getElementById('num-filhos-container');
+        const logoutBtn = document.getElementById('logout-btn');
+        const progressContainer = document.getElementById('progress-container');
+        const progressBar = document.getElementById('progress-bar');
+        const progressText = document.getElementById('progress-text');
+        const secoesLiderContainer = document.getElementById('secoes-lider-container');
+        const secoesLiderWrapper = document.getElementById('secoes-lider-wrapper');
+        const secoesCounter = document.getElementById('secoes-counter');
+        const selectAllSecoesBtn = document.getElementById('select-all-secoes');
+        const clearAllSecoesBtn = document.getElementById('clear-all-secoes');
+        
+        // CONFIGURAÇÃO DO BACKEND
+        const BACKEND_URL = 'https://sistemarhbk.onrender.com';
+        
+        // Variáveis globais
+        let empresas = [];
+        let setores = [];
+        let funcoes = [];
+        let lideres = [];
+        let currentFuncionarioId = null;
+        let fotoPreviewUrl = null;
+        let currentUser = null;
+        let progressInterval = null;
+        let selectedSecoes = new Set();
+
+        // Menu mobile toggle
+        menuToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('active');
+        });
+
+        // Fechar menu ao clicar fora (em telas menores)
+        document.addEventListener('click', (e) => {
+            if (window.innerWidth <= 992 && !sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
+                sidebar.classList.remove('active');
+            }
+        });
+
+        // Inicializar a aplicação
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Verificar autenticação primeiro
+            currentUser = await checkAuth();
+            
+            // Se autenticado, inicializar o restante da aplicação
+            if (currentUser) {
+                await initializeApp();
+                setupEventListeners();
+                setupPreviewListeners();
+                setupMasks();
+                setupToggleListeners();
+                setupSecoesListeners();
+            }
+        });
+
+        // Configurar listeners para as seções
+        function setupSecoesListeners() {
+            // Selecionar todas as seções
+            selectAllSecoesBtn.addEventListener('click', () => {
+                const options = secoesLiderWrapper.querySelectorAll('.multi-select-option');
+                options.forEach(option => {
+                    option.classList.add('selected');
+                    const value = option.getAttribute('data-value');
+                    selectedSecoes.add(value);
+                });
+                updateSecoesCounter();
+                updatePreview();
+            });
+
+            // Limpar todas as seções
+            clearAllSecoesBtn.addEventListener('click', () => {
+                const options = secoesLiderWrapper.querySelectorAll('.multi-select-option');
+                options.forEach(option => {
+                    option.classList.remove('selected');
+                });
+                selectedSecoes.clear();
+                updateSecoesCounter();
+                updatePreview();
+            });
+        }
+
+        // Atualizar contador de seções selecionadas
+        function updateSecoesCounter() {
+            const count = selectedSecoes.size;
+            secoesCounter.textContent = `${count} ${count === 1 ? 'selecionada' : 'selecionadas'}`;
+        }
+
+        // Função para verificar autenticação
+        async function checkAuth() {
+            try {
+                const { data: { session }, error } = await window.supabase.auth.getSession();
+                
+                if (error) {
+                    console.error('Erro ao verificar sessão:', error);
+                    redirectToLogin();
+                    return null;
+                }
+                
+                if (!session) {
+                    console.log('Nenhuma sessão ativa encontrada. Redirecionando para login...');
+                    redirectToLogin();
+                    return null;
+                }
+                
+                return session.user;
+            } catch (error) {
+                console.error('Erro na verificação de autenticação:', error);
+                redirectToLogin();
+                return null;
+            }
+        }
+
+        // Função para redirecionar para login
+        function redirectToLogin() {
+            const currentPath = window.location.pathname + window.location.search;
+            sessionStorage.setItem('redirectAfterLogin', currentPath);
+            window.location.href = 'index.html';
+        }
+
+        // Função para carregar perfil do usuário (com tratamento de erro aprimorado)
+        async function loadUserProfile(userId) {
+            try {
+                const { data, error } = await window.supabase
+                    .from('profiles')
+                    .select('nome, funcao, avatar_url')
+                    .eq('id', userId)
+                    .single();
+                    
+                if (error) {
+                    console.warn('Erro ao carregar perfil do usuário:', error);
+                    // Usar informações básicas do auth como fallback
+                    const userData = await window.supabase.auth.getUser();
+                    return {
+                        id: userId,
+                        email: userData.data.user?.email || 'Usuário',
+                        nome: userData.data.user?.email?.split('@')[0] || 'Usuário',
+                        funcao: 'Usuário',
+                        avatar: null
+                    };
+                } else {
+                    const userData = await window.supabase.auth.getUser();
+                    return {
+                        id: userId,
+                        email: userData.data.user?.email || 'Usuário',
+                        nome: data.nome || userData.data.user?.email?.split('@')[0] || 'Usuário',
+                        funcao: data.funcao || 'Usuário',
+                        avatar: data.avatar_url
+                    };
+                }
+            } catch (error) {
+                console.error('Erro ao carregar perfil:', error);
+                const userData = await window.supabase.auth.getUser();
+                return {
+                    id: userId,
+                    email: userData.data.user?.email || 'Usuário',
+                    nome: userData.data.user?.email?.split('@')[0] || 'Usuário',
+                    funcao: 'Usuário',
+                    avatar: null
+                };
+            }
+        }
+
+        // Função para atualizar perfil do usuário na interface
+        function updateUserProfile(userProfile) {
+            if (!userProfile) return;
+
+            const userName = document.getElementById('user-name');
+            const userRole = document.getElementById('user-role');
+            const userAvatar = document.getElementById('user-avatar');
+
+            if (userName) userName.textContent = userProfile.nome;
+            if (userRole) userRole.textContent = userProfile.funcao;
+            
+            if (userAvatar) {
+                const initials = userProfile.nome.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+                if (userProfile.avatar) {
+                    userAvatar.innerHTML = `<img src="${userProfile.avatar}" alt="${userProfile.nome}">`;
+                } else {
+                    userAvatar.innerHTML = initials;
+                }
+            }
+        }
+
+        // Função para fazer logout
+        async function logout() {
+            try {
+                const { error } = await window.supabase.auth.signOut();
+                if (error) {
+                    console.error('Erro ao fazer logout:', error);
+                    showAlert('Erro ao fazer logout. Tente novamente.', 'error');
+                } else {
+                    console.log('Logout realizado com sucesso');
+                    showAlert('Logout realizado com sucesso!', 'success');
+                    setTimeout(() => {
+                        redirectToLogin();
+                    }, 1000);
+                }
+            } catch (error) {
+                console.error('Erro no logout:', error);
+                showAlert('Erro ao fazer logout. Tente novamente.', 'error');
+            }
+        }
+
+        // Função para inicializar a aplicação
+        async function initializeApp() {
+            updateConnectionStatus('Conectando a API...', 'disconnected');
+            
+            try {
+                // Carregar perfil do usuário
+                const userProfile = await loadUserProfile(currentUser.id);
+                updateUserProfile(userProfile);
+                
+                // Testar conexão com o backend (com timeout para o Render)
+                const response = await fetchWithTimeout(`${BACKEND_URL}/api/health`, {
+                    timeout: 45000 // 45 segundos para acordar o servidor
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Erro na conexão com a API');
+                }
+                
+                const healthData = await response.json();
+                updateConnectionStatus('Conectado a API', 'connected');
+                showAlert('Conexão estabelecida com a API!', 'success');
+                
+                // Carregar dados iniciais do Supabase
+                await loadAllData();
+                
+            } catch (error) {
+                console.error('Erro ao conectar com a API:', error);
+                updateConnectionStatus('Erro na conexão', 'disconnected');
+                showAlert('Não foi possível conectar a API de Dados. O servidor pode estar iniciando (aguarde até 45s).', 'error');
+                
+                // Tentar novamente após 5 segundos
+                setTimeout(initializeApp, 5000);
+            }
+        }
+
+        // Função fetch com timeout para o Render
+        async function fetchWithTimeout(url, options = {}) {
+            const { timeout = 45000 } = options;
+            
+            const controller = new AbortController();
+            const id = setTimeout(() => controller.abort(), timeout);
+            
+            try {
+                const response = await fetch(url, {
+                    ...options,
+                    signal: controller.signal
+                });
+                clearTimeout(id);
+                return response;
+            } catch (error) {
+                clearTimeout(id);
+                throw error;
+            }
+        }
+
+        // Função para atualizar o status da conexão
+        function updateConnectionStatus(text, status) {
+            connectionText.textContent = text;
+            dbStatus.className = 'connection-status ' + status;
+        }
+
+        // Configurar listeners para os toggles
+        function setupToggleListeners() {
+            // Toggle Pai/Mãe
+            isPaiMaeToggle.addEventListener('change', function() {
+                if (this.checked) {
+                    paiMaeToggleGroup.classList.add('active');
+                    numFilhosContainer.style.display = 'block';
+                    document.getElementById('num_filhos').value = '1';
+                    atualizarCamposFilhos();
+                } else {
+                    paiMaeToggleGroup.classList.remove('active');
+                    numFilhosContainer.style.display = 'none';
+                    document.getElementById('num_filhos').value = '0';
+                    atualizarCamposFilhos();
+                }
+                updatePreview();
+            });
+
+            // Toggle Líder
+            isLiderToggle.addEventListener('change', function() {
+                if (this.checked) {
+                    liderToggleGroup.classList.add('active');
+                    // Mostrar o container de seções do líder
+                    secoesLiderContainer.style.display = 'block';
+                    // Carregar as seções no wrapper
+                    carregarSecoesParaLider();
+                } else {
+                    liderToggleGroup.classList.remove('active');
+                    // Ocultar o container de seções do líder
+                    secoesLiderContainer.style.display = 'none';
+                    // Limpar seleções
+                    selectedSecoes.clear();
+                    updateSecoesCounter();
+                }
+                updatePreview();
+            });
+        }
+
+        // Função para carregar seções no wrapper de líder
+        function carregarSecoesParaLider() {
+            // Se já tiver opções, não carregar novamente
+            if (secoesLiderWrapper.children.length > 0) return;
+            
+            if (!setores || !Array.isArray(setores) || setores.length === 0) {
+                console.warn('Nenhum setor disponível para carregar');
+                return;
+            }
+            
+            secoesLiderWrapper.innerHTML = '';
+            
+            // Adicionar cada setor como uma opção
+            setores.forEach(setor => {
+                let nome = '';
+                if (typeof setor === 'string') {
+                    nome = setor;
+                } else if (setor.nome) {
+                    nome = setor.nome;
+                } else if (setor.Nome) {
+                    nome = setor.Nome;
+                } else if (setor.descricao) {
+                    nome = setor.descricao;
+                } else if (setor.nome_setor) {
+                    nome = setor.nome_setor;
+                } else {
+                    return;
+                }
+                
+                if (nome && nome.trim() !== '') {
+                    const optionDiv = document.createElement('div');
+                    optionDiv.className = 'multi-select-option';
+                    optionDiv.setAttribute('data-value', nome);
+                    optionDiv.innerHTML = `
+                        <div class="multi-select-checkbox"></div>
+                        <div class="multi-select-label">${nome}</div>
+                    `;
+                    
+                    // Adicionar evento de clique
+                    optionDiv.addEventListener('click', () => {
+                        optionDiv.classList.toggle('selected');
+                        if (optionDiv.classList.contains('selected')) {
+                            selectedSecoes.add(nome);
+                        } else {
+                            selectedSecoes.delete(nome);
+                        }
+                        updateSecoesCounter();
+                        updatePreview();
+                    });
+                    
+                    secoesLiderWrapper.appendChild(optionDiv);
+                }
+            });
+            
+            updateSecoesCounter();
+        }
+
+        // Configurar máscaras para os campos
+        function setupMasks() {
+            // Máscara para CPF
+            const cpfInput = document.getElementById('cpf');
+            cpfInput.addEventListener('input', function(e) {
+                let value = e.target.value.replace(/\D/g, '');
+                if (value.length > 11) value = value.substring(0, 11);
+                
+                if (value.length <= 11) {
+                    value = value.replace(/(\d{3})(\d)/, '$1.$2');
+                    value = value.replace(/(\d{3})(\d)/, '$1.$2');
+                    value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+                }
+                
+                e.target.value = value;
+            });
+
+            // Máscara para Data
+            const dataInputs = ['nascimento', 'admissao'];
+            dataInputs.forEach(id => {
+                const input = document.getElementById(id);
+                input.addEventListener('input', function(e) {
+                    let value = e.target.value.replace(/\D/g, '');
+                    if (value.length > 8) value = value.substring(0, 8);
+                    
+                    if (value.length >= 5) {
+                        value = value.replace(/(\d{2})(\d)/, '$1/$2');
+                        value = value.replace(/(\d{2})(\d)/, '$1/$2');
+                    } else if (value.length >= 3) {
+                        value = value.replace(/(\d{2})(\d)/, '$1/$2');
+                    }
+                    
+                    e.target.value = value;
+                });
+            });
+
+            // Máscara para Salário
+            const salarioInput = document.getElementById('salario');
+            salarioInput.addEventListener('input', function(e) {
+                let value = e.target.value.replace(/\D/g, '');
+                value = (value / 100).toFixed(2) + '';
+                value = value.replace(".", ",");
+                value = value.replace(/(\d)(\d{3})(\d{3}),/g, "$1.$2.$3,");
+                value = value.replace(/(\d)(\d{3}),/g, "$1.$2,");
+                e.target.value = value ? 'R$ ' + value : '';
+            });
+
+            // Máscara para CEP
+            const cepInput = document.getElementById('cep');
+            cepInput.addEventListener('input', function(e) {
+                let value = e.target.value.replace(/\D/g, '');
+                if (value.length > 8) value = value.substring(0, 8);
+                
+                if (value.length > 5) {
+                    value = value.replace(/(\d{5})(\d)/, '$1-$2');
+                }
+                
+                e.target.value = value;
+            });
+        }
+
+        // Função para carregar todos os dados - VERSÃO ATUALIZADA (Supabase para dropdowns)
+        async function loadAllData() {
+            try {
+                showAlert('Carregando dados...', 'info');
+                
+                // Carregar empresas, setores, funções e líderes do Supabase
+                const [empresasResponse, setoresResponse, funcoesResponse, lideresResponse] = await Promise.all([
+                    window.supabase.from('empresas').select('*'),
+                    window.supabase.from('setores').select('*'),
+                    window.supabase.from('funcoes').select('*'),
+                    window.supabase.from('funcionarios').select('id, nome, matricula').eq('is_lider', true) // Buscar apenas líderes
+                ]);
+                
+                // Verificar erros do Supabase
+                if (empresasResponse.error) {
+                    console.error('Erro ao carregar empresas do Supabase:', empresasResponse.error);
+                    throw new Error('Erro ao carregar empresas: ' + empresasResponse.error.message);
+                }
+                if (setoresResponse.error) {
+                    console.error('Erro ao carregar setores do Supabase:', setoresResponse.error);
+                    throw new Error('Erro ao carregar setores: ' + setoresResponse.error.message);
+                }
+                if (funcoesResponse.error) {
+                    console.error('Erro ao carregar funções do Supabase:', funcoesResponse.error);
+                    throw new Error('Erro ao carregar funções: ' + funcoesResponse.error.message);
+                }
+                
+                // Atribuir os dados do Supabase
+                empresas = empresasResponse.data || [];
+                setores = setoresResponse.data || [];
+                funcoes = funcoesResponse.data || [];
+                lideres = lideresResponse.data || [];
+                
+                // Tratar possíveis erros na busca de líderes
+                if (lideresResponse.error) {
+                    console.warn('Erro ao carregar líderes do Supabase:', lideresResponse.error);
+                    console.log('Continuando sem carregar líderes...');
+                } else {
+                    console.log('Líderes carregados do Supabase:', lideresResponse.data);
+                }
+
+                populateDropdowns();
+                showAlert('Dados carregados com sucesso do Supabase!', 'success');
+                
+            } catch (error) {
+                console.error('Erro ao carregar dados:', error);
+                showAlert(`Erro ao carregar dados: ${error.message}`, 'error');
+                
+                // Tentar novamente após 5 segundos
+                setTimeout(() => {
+                    showAlert('Tentando reconectar...', 'info');
+                    loadAllData();
+                }, 5000);
+            }
+        }
+
+        // Função para popular dropdowns - VERSÃO ATUALIZADA (Supabase)
+        function populateDropdowns() {
+            // Popular dropdown de empresas
+            const empresaSelect = document.getElementById('empresa');
+            empresaSelect.innerHTML = '<option value="">Selecione a empresa</option>';
+            
+            if (empresas && Array.isArray(empresas) && empresas.length > 0) {
+                empresas.forEach(empresa => {
+                    let nome = '';
+                    if (typeof empresa === 'string') {
+                        nome = empresa;
+                    } else if (empresa.nome) {
+                        nome = empresa.nome;
+                    } else if (empresa.Nome) {
+                        nome = empresa.Nome;
+                    } else if (empresa['Nome da Empresa']) {
+                        nome = empresa['Nome da Empresa'];
+                    } else if (empresa.razao_social) {
+                        nome = empresa.razao_social;
+                    } else if (empresa.nome_empresa) {
+                        nome = empresa.nome_empresa;
+                    } else {
+                        console.warn('Empresa com estrutura desconhecida:', empresa);
+                        return;
+                    }
+                    
+                    if (nome && nome.trim() !== '') {
+                        const option = document.createElement('option');
+                        option.value = nome;
+                        option.textContent = nome;
+                        empresaSelect.appendChild(option);
+                    }
+                });
+            } else {
+                console.warn('Nenhuma empresa carregada ou estrutura inválida');
+                const option = document.createElement('option');
+                option.value = '';
+                option.textContent = 'Nenhuma empresa disponível';
+                empresaSelect.appendChild(option);
+            }
+            
+            // Popular dropdown de setores
+            const setorSelect = document.getElementById('setor');
+            setorSelect.innerHTML = '<option value="">Selecione o setor</option>';
+            
+            if (setores && Array.isArray(setores) && setores.length > 0) {
+                setores.forEach(setor => {
+                    let nome = '';
+                    if (typeof setor === 'string') {
+                        nome = setor;
+                    } else if (setor.nome) {
+                        nome = setor.nome;
+                    } else if (setor.Nome) {
+                        nome = setor.Nome;
+                    } else if (setor.descricao) {
+                        nome = setor.descricao;
+                    } else if (setor.nome_setor) {
+                        nome = setor.nome_setor;
+                    } else {
+                        console.warn('Setor com estrutura desconhecida:', setor);
+                        return;
+                    }
+                    
+                    if (nome && nome.trim() !== '') {
+                        const option = document.createElement('option');
+                        option.value = nome;
+                        option.textContent = nome;
+                        setorSelect.appendChild(option);
+                    }
+                });
+            } else {
+                console.warn('Nenhum setor carregado ou estrutura inválida');
+                const option = document.createElement('option');
+                option.value = '';
+                option.textContent = 'Nenhum setor disponível';
+                setorSelect.appendChild(option);
+            }
+            
+            // Popular dropdown de funções
+            const funcaoSelect = document.getElementById('funcao');
+            funcaoSelect.innerHTML = '<option value="">Selecione a função</option>';
+            
+            if (funcoes && Array.isArray(funcoes) && funcoes.length > 0) {
+                funcoes.forEach(funcao => {
+                    let nome = '';
+                    let cbo = '';
+                    
+                    if (typeof funcao === 'string') {
+                        nome = funcao;
+                    } else if (funcao.nome) {
+                        nome = funcao.nome;
+                        cbo = funcao.cbo || '';
+                    } else if (funcao.Nome) {
+                        nome = funcao.Nome;
+                        cbo = funcao.CBO || '';
+                    } else if (funcao.descricao) {
+                        nome = funcao.descricao;
+                        cbo = funcao.codigo || '';
+                    } else if (funcao.nome_funcao) {
+                        nome = funcao.nome_funcao;
+                        cbo = funcao.cbo || '';
+                    } else {
+                        console.warn('Função com estrutura desconhecida:', funcao);
+                        return;
+                    }
+                    
+                    if (nome && nome.trim() !== '') {
+                        const option = document.createElement('option');
+                        option.value = nome;
+                        option.textContent = nome;
+                        option.setAttribute('data-cbo', cbo);
+                        funcaoSelect.appendChild(option);
+                    }
+                });
+            } else {
+                console.warn('Nenhuma função carregada ou estrutura inválida');
+                const option = document.createElement('option');
+                option.value = '';
+                option.textContent = 'Nenhuma função disponível';
+                funcaoSelect.appendChild(option);
+            }
+            
+            // Popular dropdown de líderes
+            const liderSelect = document.getElementById('lider');
+            liderSelect.innerHTML = '<option value="">Selecione o líder</option>';
+            
+            if (lideres && Array.isArray(lideres) && lideres.length > 0) {
+                console.log('Populando dropdown de líderes com:', lideres);
+                
+                lideres.forEach(lider => {
+                    let nomeLider = '';
+                    
+                    if (typeof lider === 'string') {
+                        nomeLider = lider;
+                    } else if (lider.nome) {
+                        nomeLider = lider.nome;
+                    } else if (lider.Nome) {
+                        nomeLider = lider.Nome;
+                    } else if (lider.NOME) {
+                        nomeLider = lider.NOME;
+                    } else if (lider.nome_completo) {
+                        nomeLider = lider.nome_completo;
+                    } else if (lider.Nome_Completo) {
+                        nomeLider = lider.Nome_Completo;
+                    } else {
+                        console.warn('Líder com estrutura desconhecida:', lider);
+                        return;
+                    }
+                    
+                    if (nomeLider && nomeLider.trim() !== '') {
+                        const option = document.createElement('option');
+                        const valor = lider.id || lider.ID || lider.Id || nomeLider;
+                        option.value = valor;
+                        option.textContent = nomeLider;
+                        
+                        if (lider.matricula) {
+                            option.textContent += ` (Matrícula: ${lider.matricula})`;
+                        }
+                        
+                        liderSelect.appendChild(option);
+                    }
+                });
+                
+                if (lideres.length === 0) {
+                    const option = document.createElement('option');
+                    option.value = '';
+                    option.textContent = 'Nenhum líder cadastrado';
+                    liderSelect.appendChild(option);
+                }
+            } else {
+                console.warn('Nenhum líder carregado ou estrutura inválida');
+                const option = document.createElement('option');
+                option.value = '';
+                option.textContent = 'Nenhum líder disponível';
+                liderSelect.appendChild(option);
+            }
+            
+            // Adicionar evento para atualizar a pré-visualização quando selecionar um líder
+            liderSelect.addEventListener('change', updatePreview);
+        }
+
+        // Adicionar função para recarregar apenas os líderes
+        async function reloadLideres() {
+            try {
+                showAlert('Recarregando líderes...', 'info');
+                
+                const { data: novosLideres, error } = await window.supabase
+                    .from('funcionarios')
+                    .select('id, nome, matricula, is_lider')
+                    .eq('is_lider', true);
+                    
+                if (error) {
+                    console.error('Erro ao carregar líderes:', error);
+                    showAlert('Erro ao carregar líderes. Tente novamente.', 'error');
+                    return;
+                }
+                
+                lideres = novosLideres || [];
+                
+                const liderSelect = document.getElementById('lider');
+                const currentValue = liderSelect.value;
+                
+                // Limpar e repopular dropdown
+                liderSelect.innerHTML = '<option value="">Selecione o líder</option>';
+                
+                if (lideres && lideres.length > 0) {
+                    lideres.forEach(lider => {
+                        const option = document.createElement('option');
+                        const valor = lider.id || lider.nome;
+                        option.value = valor;
+                        option.textContent = lider.nome || 'Líder sem nome';
+                        
+                        if (lider.matricula) {
+                            option.textContent += ` (Matrícula: ${lider.matricula})`;
+                        }
+                        
+                        liderSelect.appendChild(option);
+                    });
+                    
+                    // Restaurar valor selecionado anteriormente se ainda existir
+                    if (currentValue) {
+                        liderSelect.value = currentValue;
+                    }
+                } else {
+                    const option = document.createElement('option');
+                    option.value = '';
+                    option.textContent = 'Nenhum líder cadastrado';
+                    liderSelect.appendChild(option);
+                }
+                
+                console.log('Líderes recarregados com sucesso:', lideres);
+                showAlert(`Líderes recarregados: ${lideres.length} encontrados`, 'success');
+                return lideres;
+            } catch (error) {
+                console.error('Erro ao recarregar líderes:', error);
+                showAlert('Erro ao recarregar líderes. Tente novamente.', 'error');
+                return [];
+            }
+        }
+
+        // Função para configurar event listeners
+        function setupEventListeners() {
+            // Botão de atualizar
+            refreshBtn.addEventListener('click', loadAllData);
+            
+            // Botão de recarregar líderes
+            reloadLideresBtn.addEventListener('click', reloadLideres);
+            
+            // Consultar CPF
+            document.getElementById('consultar-cpf').addEventListener('click', consultarCPF);
+            
+            // Auto-preenchimento do CBO
+            document.getElementById('funcao').addEventListener('change', function() {
+                const selectedOption = this.options[this.selectedIndex];
+                const cbo = selectedOption.getAttribute('data-cbo') || '';
+                document.getElementById('cbo').value = cbo;
+                updatePreview();
+            });
+            
+            // Buscar CEP
+            document.getElementById('buscar-cep').addEventListener('click', buscarCEP);
+            
+            // Salvar funcionário
+            document.getElementById('salvar-funcionario').addEventListener('click', salvarFuncionario);
+            
+            // Limpar campos
+            document.getElementById('limpar-campos').addEventListener('click', limparCampos);
+            
+            // Número de filhos
+            document.getElementById('num_filhos').addEventListener('change', atualizarCamposFilhos);
+            
+            // Upload de foto - VERSÃO ATUALIZADA
+            fotoInput.addEventListener('change', handleFotoUpload);
+            
+            // Logout
+            logoutBtn.addEventListener('click', logout);
+        }
+
+        // Função para configurar listeners para pré-visualização
+        function setupPreviewListeners() {
+            const inputs = document.querySelectorAll('input, select, textarea');
+            inputs.forEach(input => {
+                input.addEventListener('input', updatePreview);
+                input.addEventListener('change', updatePreview);
+            });
+        }
+
+        // Função para atualizar pré-visualização
+        function updatePreview() {
+            const nome = document.getElementById('nome').value;
+            const cpf = document.getElementById('cpf').value;
+            const nascimento = document.getElementById('nascimento').value;
+            const naturalidade = document.getElementById('naturalidade').value;
+            const sexo = document.getElementById('sexo').value;
+            const rg = document.getElementById('rg').value;
+            const pis = document.getElementById('pis').value;
+            const empresa = document.getElementById('empresa').value;
+            const setor = document.getElementById('setor').value;
+            const funcao = document.getElementById('funcao').value;
+            const cbo = document.getElementById('cbo').value;
+            const matricula = document.getElementById('matricula').value;
+            const admissao = document.getElementById('admissao').value;
+            const salario = document.getElementById('salario').value;
+            const lider = document.getElementById('lider').value;
+            const is_lider = document.getElementById('is_lider').checked;
+            const is_pai_mae = document.getElementById('is_pai_mae').checked;
+            const num_filhos = document.getElementById('num_filhos').value;
+            const cep = document.getElementById('cep').value;
+            const rua = document.getElementById('rua').value;
+            const numero = document.getElementById('numero').value;
+            const bairro = document.getElementById('bairro').value;
+            const cidade = document.getElementById('cidade').value;
+            const estado = document.getElementById('estado').value;
+            const complemento = document.getElementById('complemento').value;
+            const tamanho_fardamento = document.getElementById('tamanho_fardamento').value;
+            
+            // Obter seções selecionadas para líder
+            const secoesLider = Array.from(selectedSecoes);
+            
+            if (!nome && !cpf && !empresa) {
+                previewContent.innerHTML = `
+                    <div style="text-align: center; color: var(--text-light); padding: 20px;">
+                        <i class="fas fa-user" style="font-size: 48px; margin-bottom: 10px;"></i>
+                        <p>Os dados aparecerão aqui conforme você preencher o formulário</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = '';
+            
+            // Cabeçalho com foto e informações básicas
+            html += '<div class="preview-header">';
+            if (fotoPreviewUrl) {
+                html += `<img src="${fotoPreviewUrl}" alt="Foto do Funcionário" class="preview-photo">`;
+            } else {
+                html += '<div class="preview-photo" style="background: var(--gray-light); display: flex; align-items: center; justify-content: center;">';
+                html += '<i class="fas fa-user" style="font-size: 2rem; color: var(--text-light);"></i>';
+                html += '</div>';
+            }
+            
+            html += '<div style="flex: 1;">';
+            html += `<div class="preview-name">${nome || 'Nome não informado'}</div>`;
+            html += `<div class="preview-position">${funcao || 'Função não informada'}</div>`;
+            html += `<div>${empresa || 'Empresa não informada'}</div>`;
+            
+            // Badges de status
+            html += '<div style="display: flex; gap: 10px; margin-top: 10px;">';
+            if (is_lider) {
+                html += '<span class="status-badge warning"><i class="fas fa-crown"></i> Líder</span>';
+            }
+            if (is_pai_mae) {
+                html += '<span class="status-badge success"><i class="fas fa-baby"></i> Pai/Mãe</span>';
+            }
+            html += '</div>';
+            
+            html += '</div>';
+            html += '</div>';
+            
+            // Seção de Dados Pessoais
+            html += '<div class="preview-section-title">Dados Pessoais</div>';
+            html += '<div class="preview-grid">';
+            html += '<div class="preview-item"><span class="preview-label">CPF:</span><span class="preview-value">' + (cpf || 'Não informado') + '</span></div>';
+            html += '<div class="preview-item"><span class="preview-label">Data de Nascimento:</span><span class="preview-value">' + (nascimento || 'Não informado') + '</span></div>';
+            html += '<div class="preview-item"><span class="preview-label">Naturalidade:</span><span class="preview-value">' + (naturalidade || 'Não informado') + '</span></div>';
+            html += '<div class="preview-item"><span class="preview-label">Sexo:</span><span class="preview-value">' + (sexo === 'M' ? 'Masculino' : sexo === 'F' ? 'Feminino' : sexo === 'O' ? 'Outro' : 'Não informado') + '</span></div>';
+            html += '<div class="preview-item"><span class="preview-label">RG:</span><span class="preview-value">' + (rg || 'Não informado') + '</span></div>';
+            html += '<div class="preview-item"><span class="preview-label">PIS:</span><span class="preview-value">' + (pis || 'Não informado') + '</span></div>';
+            html += '</div>';
+            
+            // Seção de Dados Profissionais
+            html += '<div class="preview-section-title">Dados Profissionais</div>';
+            html += '<div class="preview-grid">';
+            html += '<div class="preview-item"><span class="preview-label">Empresa:</span><span class="preview-value">' + (empresa || 'Não informado') + '</span></div>';
+            html += '<div class="preview-item"><span class="preview-label">Setor:</span><span class="preview-value">' + (setor || 'Não informado') + '</span></div>';
+            html += '<div class="preview-item"><span class="preview-label">Função:</span><span class="preview-value">' + (funcao || 'Não informado') + '</span></div>';
+            html += '<div class="preview-item"><span class="preview-label">CBO:</span><span class="preview-value">' + (cbo || 'Não informado') + '</span></div>';
+            html += '<div class="preview-item"><span class="preview-label">Matrícula:</span><span class="preview-value">' + (matricula || 'Não informado') + '</span></div>';
+            html += '<div class="preview-item"><span class="preview-label">Data de Admissão:</span><span class="preview-value">' + (admissao || 'Não informado') + '</span></div>';
+            html += '<div class="preview-item"><span class="preview-label">Salário:</span><span class="preview-value">' + (salario || 'Não informado') + '</span></div>';
+            
+            // Seções do Líder
+            if (is_lider && secoesLider.length > 0) {
+                html += '<div class="preview-item"><span class="preview-label">Seções como Líder:</span><span class="preview-value">' + secoesLider.join(', ') + '</span></div>';
+            }
+            
+            // Mostrar o nome do líder selecionado
+            let nomeLiderSelecionado = 'Não informado';
+            if (lider) {
+                const liderSelect = document.getElementById('lider');
+                const selectedOption = liderSelect.options[liderSelect.selectedIndex];
+                if (selectedOption) {
+                    nomeLiderSelecionado = selectedOption.textContent;
+                }
+            }
+            html += '<div class="preview-item"><span class="preview-label">Líder Responsável:</span><span class="preview-value">' + nomeLiderSelecionado + '</span></div>';
+            html += '</div>';
+            
+            // Seção de Endereço
+            if (rua || bairro || cidade || estado) {
+                html += '<div class="preview-section-title">Endereço</div>';
+                html += '<div class="preview-grid">';
+                html += '<div class="preview-item"><span class="preview-label">CEP:</span><span class="preview-value">' + (cep || 'Não informado') + '</span></div>';
+                html += '<div class="preview-item"><span class="preview-label">Rua:</span><span class="preview-value">' + (rua || 'Não informado') + '</span></div>';
+                html += '<div class="preview-item"><span class="preview-label">Número:</span><span class="preview-value">' + (numero || 'Não informado') + '</span></div>';
+                html += '<div class="preview-item"><span class="preview-label">Bairro:</span><span class="preview-value">' + (bairro || 'Não informado') + '</span></div>';
+                html += '<div class="preview-item"><span class="preview-label">Cidade:</span><span class="preview-value">' + (cidade || 'Não informado') + '</span></div>';
+                html += '<div class="preview-item"><span class="preview-label">Estado:</span><span class="preview-value">' + (estado || 'Não informado') + '</span></div>';
+                html += '<div class="preview-item"><span class="preview-label">Complemento:</span><span class="preview-value">' + (complemento || 'Não informado') + '</span></div>';
+                html += '</div>';
+            }
+            
+            // Seção de Informações Familiares
+            html += '<div class="preview-section-title">Informações Familiares</div>';
+            html += '<div class="preview-grid">';
+            html += '<div class="preview-item"><span class="preview-label">Número de Filhos:</span><span class="preview-value">' + (is_pai_mae ? num_filhos : '0') + '</span></div>';
+            
+            // Adicionar datas de nascimento dos filhos se houver
+            if (is_pai_mae && parseInt(num_filhos) > 0) {
+                for (let i = 1; i <= parseInt(num_filhos); i++) {
+                    const nascFilho = document.getElementById(`nasc_filho_${i}`)?.value || '';
+                    if (nascFilho) {
+                        html += `<div class="preview-item"><span class="preview-label">Nasc. Filho ${i}:</span><span class="preview-value">${nascFilho}</span></div>`;
+                    }
+                }
+            }
+            html += '</div>';
+            
+            // Seção de Fardamento
+            if (tamanho_fardamento) {
+                html += '<div class="preview-section-title">Fardamento</div>';
+                html += '<div class="preview-item"><span class="preview-label">Tamanho:</span><span class="preview-value">' + tamanho_fardamento + '</span></div>';
+            }
+            
+            previewContent.innerHTML = html;
+        }
+
+        // Função para manipular upload de foto - VERSÃO ATUALIZADA E CORRIGIDA
+        function handleFotoUpload(event) {
+            const file = event.target.files[0];
+            if (!file) {
+                console.log('Nenhum arquivo selecionado');
+                return;
+            }
+            
+            console.log('📁 Arquivo selecionado:', file.name);
+            console.log('📏 Tamanho:', file.size, 'bytes');
+            console.log('🎨 Tipo:', file.type);
+            
+            // Verificar se é uma imagem
+            if (!file.type.startsWith('image/')) {
+                showAlert('❌ Por favor, selecione apenas arquivos de imagem (JPEG, PNG, etc.).', 'error');
+                event.target.value = '';
+                fileInfo.textContent = 'Tipo de arquivo inválido. Selecione uma imagem.';
+                fileInfo.className = 'file-info error';
+                return;
+            }
+            
+            // Verificar tamanho do arquivo (máx 2MB)
+            const maxSize = 2 * 1024 * 1024; // 2MB em bytes
+            if (file.size > maxSize) {
+                showAlert(`❌ A foto deve ter no máximo 2MB. Tamanho atual: ${(file.size / 1024 / 1024).toFixed(2)} MB`, 'error');
+                event.target.value = '';
+                fileInfo.textContent = `Arquivo muito grande (${(file.size / 1024 / 1024).toFixed(2)} MB). Máximo: 2MB.`;
+                fileInfo.className = 'file-info error';
+                return;
+            }
+            
+            // Atualizar informações do arquivo
+            fileInfo.textContent = `Processando: ${file.name} (${(file.size / 1024).toFixed(2)} KB)`;
+            fileInfo.className = 'file-info';
+            
+            // Criar preview da imagem
+            const reader = new FileReader();
+            
+            reader.onloadstart = function() {
+                console.log('⏳ Iniciando leitura do arquivo...');
+                fileInfo.textContent = 'Lendo arquivo...';
+            };
+            
+            reader.onload = function(e) {
+                console.log('✅ Imagem carregada, tamanho base64:', e.target.result.length);
+                fotoPreviewUrl = e.target.result;
+                
+                // Verificar se a string base64 é válida
+                if (!fotoPreviewUrl || typeof fotoPreviewUrl !== 'string') {
+                    console.error('❌ String base64 inválida');
+                    showAlert('Erro ao processar a imagem. Tente novamente.', 'error');
+                    event.target.value = '';
+                    fileInfo.textContent = 'Erro ao processar a imagem';
+                    fileInfo.className = 'file-info error';
+                    return;
+                }
+                
+                fileInfo.textContent = `✅ Imagem pronta: ${file.name} (${(file.size / 1024).toFixed(2)} KB)`;
+                fileInfo.className = 'file-info success';
+                updatePreview();
+                showAlert('✅ Foto carregada com sucesso!', 'success');
+            };
+            
+            reader.onerror = function(error) {
+                console.error('❌ Erro ao ler arquivo:', error);
+                showAlert('Erro ao ler o arquivo. Tente novamente.', 'error');
+                event.target.value = '';
+                fileInfo.textContent = 'Erro ao ler o arquivo';
+                fileInfo.className = 'file-info error';
+            };
+            
+            reader.onabort = function() {
+                console.log('⏹️ Leitura do arquivo cancelada');
+                showAlert('Upload cancelado.', 'warning');
+            };
+            
+            reader.readAsDataURL(file);
+        }
+
+        // Funções de formatação para enviar ao backend
+        function formatarCPF(cpf) {
+            return cpf.replace(/\D/g, '');
+        }
+
+        function formatarData(data) {
+            // Converte DD/MM/AAAA para AAAA-MM-DD
+            if (!data) return null;
+            const parts = data.split('/');
+            if (parts.length === 3) {
+                return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+            }
+            return data;
+        }
+
+        function formatarSalario(salario) {
+            // Remove "R$", pontos e converte vírgula para ponto
+            if (!salario) return null;
+            let valor = salario.replace('R$', '').replace(/\./g, '').replace(',', '.').trim();
+            return parseFloat(valor) || null;
+        }
+
+        function formatarCEP(cep) {
+            return cep.replace(/\D/g, '');
+        }
+
+        // Função para iniciar barra de progresso
+        function startProgressBar() {
+            progressContainer.style.display = 'block';
+            progressBar.style.width = '0%';
+            progressText.textContent = 'Iniciando conexão com o servidor...';
+            
+            let progress = 0;
+            clearInterval(progressInterval);
+            
+            progressInterval = setInterval(() => {
+                progress += 0.5;
+                progressBar.style.width = `${Math.min(progress, 95)}%`;
+                
+                if (progress < 20) {
+                    progressText.textContent = 'Aguardando resposta do servidor...';
+                } else if (progress < 50) {
+                    progressText.textContent = 'Servidor pode estar iniciando (isso pode levar até 45 segundos)...';
+                } else if (progress < 80) {
+                    progressText.textContent = 'Aguarde, o servidor está processando sua solicitação...';
+                } else {
+                    progressText.textContent = 'Processamento em andamento...';
+                }
+            }, 250);
+        }
+
+        // Função para parar barra de progresso
+        function stopProgressBar(success = true) {
+            clearInterval(progressInterval);
+            
+            if (success) {
+                progressBar.style.width = '100%';
+                progressText.textContent = 'Processamento concluído!';
+                
+                setTimeout(() => {
+                    progressContainer.style.display = 'none';
+                }, 1000);
+            } else {
+                progressContainer.style.display = 'none';
+            }
+        }
+
+        // Função para consultar CPF (mantida no backend)
+        async function consultarCPF() {
+            const cpf = formatarCPF(document.getElementById('cpf').value);
+            
+            if (cpf.length !== 11) {
+                showAlert('CPF deve conter 11 dígitos.', 'error');
+                return;
+            }
+            
+            try {
+                showAlert('Consultando CPF...', 'info');
+                startProgressBar();
+                
+                const response = await fetchWithTimeout(`${BACKEND_URL}/api/consultar-cpf`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ cpf: cpf })
+                });
+                
+                const data = await response.json();
+                stopProgressBar();
+                
+                if (data.success) {
+                    if (data.data && data.data.nome) {
+                        showAlert('Consulta CPF realizada com sucesso! Dados preenchidos automaticamente.', 'success');
+                        
+                        // Preencher automaticamente os campos com os dados da API
+                        if (data.data && data.data.nome) {
+                            document.getElementById('nome').value = data.data.nome;
+                        }
+                        if (data.data && data.data.data_nascimento) {
+                            document.getElementById('nascimento').value = data.data.data_nascimento;
+                        }
+                        if (data.data && data.data.sexo) {
+                            document.getElementById('sexo').value = data.data.sexo;
+                        }
+                    } else {
+                        showAlert('CPF disponível para cadastro.', 'success');
+                    }
+                } else {
+                    if (data.cpf_existente) {
+                        showAlert(data.error, 'error');
+                    } else {
+                        showAlert(data.error, 'error');
+                    }
+                }
+                
+            } catch (error) {
+                stopProgressBar(false);
+                console.error('Erro ao consultar CPF:', error);
+                
+                if (error.name === 'AbortError') {
+                    showAlert('Tempo limite excedido. O servidor pode estar iniciando. Tente novamente em alguns segundos.', 'error');
+                } else {
+                    showAlert('Erro ao consultar CPF. Serviço temporariamente indisponível.', 'error');
+                }
+            }
+        }
+
+        // Função para buscar CEP (ViaCEP)
+        async function buscarCEP() {
+            const cep = formatarCEP(document.getElementById('cep').value);
+            
+            if (cep.length !== 8) {
+                showAlert('CEP deve conter 8 dígitos.', 'error');
+                return;
+            }
+            
+            try {
+                showAlert('Consultando CEP...', 'info');
+                
+                const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+                
+                if (!response.ok) {
+                    throw new Error('Erro na consulta do CEP');
+                }
+                
+                const data = await response.json();
+                
+                if (data.erro) {
+                    showAlert('CEP não encontrado.', 'error');
+                    return;
+                }
+                
+                showAlert('CEP encontrado! Endereço preenchido automaticamente.', 'success');
+                
+                // Preencher automaticamente os campos de endereço
+                document.getElementById('rua').value = data.logradouro || '';
+                document.getElementById('bairro').value = data.bairro || '';
+                document.getElementById('cidade').value = data.localidade || '';
+                document.getElementById('estado').value = data.uf || '';
+                
+                // Focar no campo número após preencher
+                document.getElementById('numero').focus();
+                
+            } catch (error) {
+                console.error('Erro ao consultar CEP:', error);
+                showAlert('Erro ao consultar CEP. Serviço temporariamente indisponível.', 'error');
+            }
+        }
+
+        // Função para salvar funcionário - VERSÃO ATUALIZADA COM FOTO
+        async function salvarFuncionario() {
+            const btn = document.getElementById('salvar-funcionario');
+            const originalText = btn.innerHTML;
+            
+            try {
+                console.log('🔄 Iniciando salvamento de funcionário...');
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
+                startProgressBar();
+                
+                // Obter seções selecionadas para líder
+                const secoesLider = Array.from(selectedSecoes);
+                
+                // Coletar e formatar dados do formulário
+                const funcionarioData = {
+                    NOME: document.getElementById('nome').value.trim(),
+                    CPF: formatarCPF(document.getElementById('cpf').value),
+                    NASC: formatarData(document.getElementById('nascimento').value),
+                    NATURALIDADE: document.getElementById('naturalidade').value.trim(),
+                    SEXO: document.getElementById('sexo').value,
+                    RG: document.getElementById('rg').value.trim(),
+                    PIS: document.getElementById('pis').value.trim(),
+                    EMPRESA: document.getElementById('empresa').value,
+                    SETOR: document.getElementById('setor').value,
+                    FUNCAO: document.getElementById('funcao').value,
+                    CBO: document.getElementById('cbo').value.trim(),
+                    MATRICULA: document.getElementById('matricula').value.trim(),
+                    ADMISSAO: formatarData(document.getElementById('admissao').value),
+                    SALARIO: formatarSalario(document.getElementById('salario').value),
+                    SECOES_LIDER: document.getElementById('is_lider').checked ? secoesLider.join(', ') : null,
+                    LIDER_RESPONSAVEL: document.getElementById('lider').value,
+                    IS_LIDER: document.getElementById('is_lider').checked,
+                    IS_PAI_MAE: document.getElementById('is_pai_mae').checked,
+                    NUM_FILHOS: parseInt(document.getElementById('num_filhos').value) || 0,
+                    END_CEP: formatarCEP(document.getElementById('cep').value),
+                    END_RUA: document.getElementById('rua').value.trim(),
+                    END_NUMERO: document.getElementById('numero').value.trim(),
+                    END_BAIRRO: document.getElementById('bairro').value.trim(),
+                    END_CIDADE: document.getElementById('cidade').value.trim(),
+                    END_ESTADO: document.getElementById('estado').value.trim(),
+                    END_COMPLEMENTO: document.getElementById('complemento').value.trim(),
+                    TAMANHO_FARDAMENTO: document.getElementById('tamanho_fardamento').value
+                };
+                
+                console.log('📋 Dados do funcionário coletados:', {
+                    nome: funcionarioData.NOME,
+                    cpf: funcionarioData.CPF,
+                    empresa: funcionarioData.EMPRESA,
+                    temFoto: !!fotoPreviewUrl,
+                    isLider: funcionarioData.IS_LIDER,
+                    secoesLider: funcionarioData.SECOES_LIDER
+                });
+                
+                // Adicionar dados dos filhos
+                const numFilhos = parseInt(document.getElementById('num_filhos').value);
+                for (let i = 1; i <= numFilhos; i++) {
+                    const nascFilho = document.getElementById(`nasc_filho_${i}`)?.value || '';
+                    if (nascFilho) {
+                        funcionarioData[`NASC_FILHO_${i}`] = formatarData(nascFilho);
+                    }
+                }
+                
+                // Adicionar foto se existir
+                if (fotoPreviewUrl && fotoPreviewUrl.startsWith('data:image')) {
+                    console.log('📸 Foto detectada, tamanho base64:', fotoPreviewUrl.length);
+                    funcionarioData.FOTO = fotoPreviewUrl;
+                    
+                    // Verificar se a foto não é muito grande
+                    if (fotoPreviewUrl.length > 3000000) { // ~3MB em base64
+                        console.warn('⚠️  Foto muito grande, compactando...');
+                        // Tentar redimensionar a imagem
+                        try {
+                            funcionarioData.FOTO = await comprimirImagem(fotoPreviewUrl);
+                            console.log('📸 Foto compactada, novo tamanho:', funcionarioData.FOTO.length);
+                        } catch (compressError) {
+                            console.warn('❌ Erro ao compactar imagem:', compressError);
+                            // Usar a imagem original mesmo que seja grande
+                        }
+                    }
+                } else {
+                    console.log('📸 Nenhuma foto para enviar');
+                    funcionarioData.FOTO = null;
+                }
+                
+                // Validar campos obrigatórios
+                const camposObrigatorios = ['NOME', 'CPF', 'EMPRESA', 'SETOR', 'FUNCAO', 'MATRICULA', 'ADMISSAO'];
+                const camposFaltantes = camposObrigatorios.filter(campo => !funcionarioData[campo] || funcionarioData[campo] === '');
+                
+                if (camposFaltantes.length > 0) {
+                    throw new Error(`Campos obrigatórios não preenchidos: ${camposFaltantes.join(', ')}`);
+                }
+                
+                // Validar CPF
+                if (funcionarioData.CPF.length !== 11) {
+                    throw new Error('CPF deve conter 11 dígitos');
+                }
+                
+                // Validar seções do líder se for líder
+                if (funcionarioData.IS_LIDER && (!funcionarioData.SECOES_LIDER || funcionarioData.SECOES_LIDER.trim() === '')) {
+                    throw new Error('Líder deve ter pelo menos uma seção sob sua responsabilidade');
+                }
+                
+                let response;
+                let url = `${BACKEND_URL}/api/funcionarios`;
+                let method = 'POST';
+                
+                if (currentFuncionarioId) {
+                    url = `${BACKEND_URL}/api/funcionarios/${currentFuncionarioId}`;
+                    method = 'PUT';
+                }
+                
+                console.log(`🌐 Enviando requisição para: ${url}`);
+                console.log('📤 Método:', method);
+                console.log('📊 Dados enviados:', Object.keys(funcionarioData));
+                
+                response = await fetchWithTimeout(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(funcionarioData)
+                });
+                
+                console.log('📡 Resposta recebida, status:', response.status);
+                
+                const result = await response.json();
+                console.log('📨 Resultado:', result.success ? '✅ Sucesso' : '❌ Erro');
+                stopProgressBar();
+                
+                if (result.success) {
+                    showAlert(result.message, 'success');
+                    console.log('✅ Funcionário salvo com sucesso!');
+                    console.log('📸 URL da foto:', result.foto_url);
+                    limparCampos();
+                    
+                    // Recarregar dados (incluindo líderes, pois pode ter sido adicionado um novo líder)
+                    await loadAllData();
+                    
+                } else {
+                    throw new Error(result.error || 'Erro desconhecido ao salvar funcionário');
+                }
+                
+            } catch (error) {
+                stopProgressBar(false);
+                console.error('❌ Erro ao salvar funcionário:', error);
+                
+                if (error.name === 'AbortError') {
+                    showAlert('Tempo limite excedido. O servidor pode estar iniciando. Tente novamente em alguns segundos.', 'error');
+                } else {
+                    showAlert(`Erro ao salvar funcionário: ${error.message}`, 'error');
+                }
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        }
+
+        // Função para comprimir imagem (opcional)
+        async function comprimirImagem(base64) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.src = base64;
+                
+                img.onload = function() {
+                    try {
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+                        
+                        // Definir tamanho máximo
+                        const maxWidth = 800;
+                        const maxHeight = 800;
+                        let width = img.width;
+                        let height = img.height;
+                        
+                        // Redimensionar se necessário
+                        if (width > maxWidth || height > maxHeight) {
+                            const ratio = Math.min(maxWidth / width, maxHeight / height);
+                            width = Math.floor(width * ratio);
+                            height = Math.floor(height * ratio);
+                        }
+                        
+                        canvas.width = width;
+                        canvas.height = height;
+                        
+                        // Desenhar imagem redimensionada
+                        ctx.drawImage(img, 0, 0, width, height);
+                        
+                        // Converter para JPEG com qualidade 80%
+                        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.8);
+                        resolve(compressedBase64);
+                    } catch (error) {
+                        reject(error);
+                    }
+                };
+                
+                img.onerror = function(error) {
+                    reject(new Error('Erro ao carregar imagem para compressão'));
+                };
+            });
+        }
+
+        // Função para limpar campos do formulário
+        function limparCampos() {
+            document.querySelectorAll('#form-tab input, #form-tab select, #form-tab textarea').forEach(element => {
+                if (element.type !== 'button' && element.type !== 'checkbox' && element.type !== 'file') {
+                    element.value = '';
+                } else if (element.type === 'checkbox') {
+                    element.checked = false;
+                } else if (element.type === 'file') {
+                    element.value = '';
+                }
+            });
+            document.getElementById('num_filhos').value = '0';
+            document.getElementById('file-info').textContent = '';
+            document.getElementById('file-info').className = 'file-info';
+            fotoPreviewUrl = null;
+            atualizarCamposFilhos();
+            currentFuncionarioId = null;
+            
+            // Resetar toggles e containers
+            paiMaeToggleGroup.classList.remove('active');
+            liderToggleGroup.classList.remove('active');
+            numFilhosContainer.style.display = 'none';
+            secoesLiderContainer.style.display = 'none';
+            
+            // Limpar seleções de seções
+            selectedSecoes.clear();
+            updateSecoesCounter();
+            
+            // Limpar visualmente as opções selecionadas
+            const options = secoesLiderWrapper.querySelectorAll('.multi-select-option');
+            options.forEach(option => {
+                option.classList.remove('selected');
+            });
+            
+            updatePreview();
+        }
+
+        // Função para atualizar campos de filhos
+        function atualizarCamposFilhos() {
+            const numFilhos = parseInt(document.getElementById('num_filhos').value);
+            const container = document.getElementById('filhos-container');
+            
+            container.innerHTML = '';
+            
+            for (let i = 1; i <= numFilhos; i++) {
+                const div = document.createElement('div');
+                div.className = 'form-group';
+                div.innerHTML = `
+                    <label for="nasc_filho_${i}">
+                        <i class="fas fa-birthday-cake"></i>
+                        Data de Nascimento do Filho ${i}
+                    </label>
+                    <div class="input-with-icon">
+                        <i class="fas fa-calendar input-icon"></i>
+                        <input type="text" id="nasc_filho_${i}" placeholder="DD/MM/AAAA">
+                    </div>
+                `;
+                container.appendChild(div);
+            }
+            
+            // Aplicar máscara de data para os novos campos
+            for (let i = 1; i <= numFilhos; i++) {
+                const input = document.getElementById(`nasc_filho_${i}`);
+                if (input) {
+                    input.addEventListener('input', function(e) {
+                        let value = e.target.value.replace(/\D/g, '');
+                        if (value.length > 8) value = value.substring(0, 8);
+                        
+                        if (value.length >= 5) {
+                            value = value.replace(/(\d{2})(\d)/, '$1/$2');
+                            value = value.replace(/(\d{2})(\d)/, '$1/$2');
+                        } else if (value.length >= 3) {
+                            value = value.replace(/(\d{2})(\d)/, '$1/$2');
+                        }
+                        
+                        e.target.value = value;
+                    });
+                }
+            }
+        }
+
+        // Funções auxiliares
+        function formatarDataBR(dataISO) {
+            if (!dataISO) return '';
+            const date = new Date(dataISO);
+            return date.toLocaleDateString('pt-BR');
+        }
+
+        function showAlert(message, type) {
+            // Limpar alertas anteriores
+            globalAlert.innerHTML = '';
+            
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.innerHTML = `
+                <i class="fas fa-${type === 'error' ? 'exclamation-triangle' : type === 'success' ? 'check-circle' : 'info-circle'}"></i>
+                <span>${message}</span>
+            `;
+            
+            globalAlert.appendChild(alertDiv);
+            
+            // Remover após 5 segundos (exceto para errors)
+            if (type !== 'error') {
+                setTimeout(() => {
+                    alertDiv.remove();
+                }, 5000);
+            }
+        }
+    </script>
+</body>
+</html>
