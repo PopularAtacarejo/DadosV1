@@ -1069,6 +1069,57 @@
                                         </div>
                                     </div>
 
+                                    <div class="grid-2">
+                                        <div class="form-group">
+                                            <label for="tamanho_fardamento">
+                                                <i class="fas fa-tshirt"></i>
+                                                Tamanho do Fardamento (Opcional)
+                                            </label>
+                                            <div class="input-with-icon">
+                                                <i class="fas fa-ruler input-icon"></i>
+                                                <select id="tamanho_fardamento">
+                                                    <option value="">Selecione o tamanho</option>
+                                                    <option value="PP">PP</option>
+                                                    <option value="P">P</option>
+                                                    <option value="M">M</option>
+                                                    <option value="G">G</option>
+                                                    <option value="GG">GG</option>
+                                                    <option value="XXG">XXG</option>
+                                                    <option value="XCG">XCG</option>
+                                                    <option value="Não Usa">Não Usa</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="tamanho_calcado">
+                                                <i class="fas fa-shoe-prints"></i>
+                                                Tamanho do Calçado (Opcional)
+                                            </label>
+                                            <div class="input-with-icon">
+                                                <i class="fas fa-walking input-icon"></i>
+                                                <select id="tamanho_calcado">
+                                                    <option value="">Selecione o tamanho</option>
+                                                    <option value="33">33</option>
+                                                    <option value="34">34</option>
+                                                    <option value="35">35</option>
+                                                    <option value="36">36</option>
+                                                    <option value="37">37</option>
+                                                    <option value="38">38</option>
+                                                    <option value="39">39</option>
+                                                    <option value="40">40</option>
+                                                    <option value="41">41</option>
+                                                    <option value="42">42</option>
+                                                    <option value="43">43</option>
+                                                    <option value="44">44</option>
+                                                    <option value="45">45</option>
+                                                    <option value="46">46</option>
+                                                    <option value="47">47</option>
+                                                    <option value="Não Informado">Não Informado</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+
                                     <div class="form-group">
                                         <label for="foto">
                                             <i class="fas fa-camera"></i>
@@ -1085,26 +1136,6 @@
                                         <small style="color: var(--text-light); font-size: 0.8rem;">
                                             A foto será automaticamente redimensionada se necessário.
                                         </small>
-                                    </div>
-
-                                    <div class="form-group">
-                                        <label for="tamanho_fardamento">
-                                            <i class="fas fa-tshirt"></i>
-                                            Tamanho do Fardamento (Opcional)
-                                        </label>
-                                        <div class="input-with-icon">
-                                            <i class="fas fa-ruler input-icon"></i>
-                                            <select id="tamanho_fardamento">
-                                                <option value="">Selecione o tamanho</option>
-                                                <option value="PP">PP</option>
-                                                <option value="P">P</option>
-                                                <option value="M">M</option>
-                                                <option value="G">G</option>
-                                                <option value="GG">GG</option>
-                                                <option value="XXG">XXG</option>
-                                                <option value="XCG">XCG</option>
-                                            </select>
-                                        </div>
                                     </div>
                                 </div>
                                 
@@ -1436,23 +1467,23 @@
         </div>
 
         <footer>
-    <div class="container">
-        <p>
-            Sistema Desenvolvido por 
-            <a href="https://wa.me/5582999158412" 
-               target="_blank" 
-               style="color: white; text-decoration: underline; font-weight: bold;"
-               onmouseover="this.style.color='#5d78ff'" 
-               onmouseout="this.style.color='white'">
-                Jeferson
-            </a>
-        </p>
-        <p>Análise de dados de RH 2025 - Todos os direitos reservados</p>
-        <p style="font-size: 0.8rem; margin-top: 10px; opacity: 0.8;">
-            <i class="fas fa-mobile-alt"></i> WhatsApp: (82) 99915-8412
-        </p>
-    </div>
-</footer>
+            <div class="container">
+                <p>
+                    Sistema Desenvolvido por 
+                    <a href="https://wa.me/5582999158412" 
+                       target="_blank" 
+                       style="color: white; text-decoration: underline; font-weight: bold;"
+                       onmouseover="this.style.color='#5d78ff'" 
+                       onmouseout="this.style.color='white'">
+                        Jeferson
+                    </a>
+                </p>
+                <p>Análise de dados de RH 2025 - Todos os direitos reservados</p>
+                <p style="font-size: 0.8rem; margin-top: 10px; opacity: 0.8;">
+                    <i class="fas fa-mobile-alt"></i> WhatsApp: (82) 99915-8412
+                </p>
+            </div>
+        </footer>
     </div>
 
     <script>
@@ -1595,7 +1626,7 @@
             window.location.href = 'index.html';
         }
 
-        // Função para carregar perfil do usuário (com tratamento de erro aprimorado)
+        // Função para carregar perfil do usuário
         async function loadUserProfile(userId) {
             try {
                 const { data, error } = await window.supabase
@@ -1606,7 +1637,6 @@
                     
                 if (error) {
                     console.warn('Erro ao carregar perfil do usuário:', error);
-                    // Usar informações básicas do auth como fallback
                     const userData = await window.supabase.auth.getUser();
                     return {
                         id: userId,
@@ -1688,7 +1718,7 @@
                 const userProfile = await loadUserProfile(currentUser.id);
                 updateUserProfile(userProfile);
                 
-                // Testar conexão com o backend (com timeout para o Render)
+                // Testar conexão com o backend
                 const response = await fetchWithTimeout(`${BACKEND_URL}/api/health`, {
                     timeout: 45000 // 45 segundos para acordar o servidor
                 });
@@ -1952,7 +1982,7 @@
             }
         }
 
-        // Função para popular dropdowns - VERSÃO ATUALIZADA (Supabase)
+        // Função para popular dropdowns - VERSÃO ATUALIZADA (com IDs)
         function populateDropdowns() {
             // Popular dropdown de empresas
             const empresaSelect = document.getElementById('empresa');
@@ -2074,16 +2104,19 @@
                 funcaoSelect.appendChild(option);
             }
             
-            // Popular dropdown de líderes
+            // Popular dropdown de líderes COM IDs
             const liderSelect = document.getElementById('lider');
             liderSelect.innerHTML = '<option value="">Selecione o líder</option>';
             
             if (lideres && Array.isArray(lideres) && lideres.length > 0) {
-                console.log('Populando dropdown de líderes com:', lideres);
+                console.log('Populando dropdown de líderes com IDs:', lideres);
                 
                 lideres.forEach(lider => {
+                    // Verificar se o líder tem ID válido
+                    const liderId = lider.id || lider.ID || lider.Id;
                     let nomeLider = '';
                     
+                    // Obter o nome do líder
                     if (typeof lider === 'string') {
                         nomeLider = lider;
                     } else if (lider.nome) {
@@ -2101,21 +2134,24 @@
                         return;
                     }
                     
-                    if (nomeLider && nomeLider.trim() !== '') {
+                    if (liderId && nomeLider && nomeLider.trim() !== '') {
                         const option = document.createElement('option');
-                        const valor = lider.id || lider.ID || lider.Id || nomeLider;
-                        option.value = valor;
+                        option.value = liderId; // USAR O ID COMO VALOR
                         option.textContent = nomeLider;
                         
                         if (lider.matricula) {
                             option.textContent += ` (Matrícula: ${lider.matricula})`;
                         }
                         
+                        // Adicionar data attributes para referência
+                        option.setAttribute('data-id', liderId);
+                        option.setAttribute('data-nome', nomeLider);
+                        
                         liderSelect.appendChild(option);
                     }
                 });
                 
-                if (lideres.length === 0) {
+                if (liderSelect.children.length === 1) { // Apenas a opção padrão
                     const option = document.createElement('option');
                     option.value = '';
                     option.textContent = 'Nenhum líder cadastrado';
@@ -2154,21 +2190,26 @@
                 const liderSelect = document.getElementById('lider');
                 const currentValue = liderSelect.value;
                 
-                // Limpar e repopular dropdown
+                // Limpar e repopular dropdown com IDs
                 liderSelect.innerHTML = '<option value="">Selecione o líder</option>';
                 
                 if (lideres && lideres.length > 0) {
                     lideres.forEach(lider => {
-                        const option = document.createElement('option');
-                        const valor = lider.id || lider.nome;
-                        option.value = valor;
-                        option.textContent = lider.nome || 'Líder sem nome';
-                        
-                        if (lider.matricula) {
-                            option.textContent += ` (Matrícula: ${lider.matricula})`;
+                        if (lider.id && lider.nome) {
+                            const option = document.createElement('option');
+                            option.value = lider.id; // USAR ID
+                            option.textContent = lider.nome;
+                            
+                            if (lider.matricula) {
+                                option.textContent += ` (Matrícula: ${lider.matricula})`;
+                            }
+                            
+                            // Adicionar data attributes
+                            option.setAttribute('data-id', lider.id);
+                            option.setAttribute('data-nome', lider.nome);
+                            
+                            liderSelect.appendChild(option);
                         }
-                        
-                        liderSelect.appendChild(option);
                     });
                     
                     // Restaurar valor selecionado anteriormente se ainda existir
@@ -2182,7 +2223,7 @@
                     liderSelect.appendChild(option);
                 }
                 
-                console.log('Líderes recarregados com sucesso:', lideres);
+                console.log('✅ Líderes recarregados com sucesso:', lideres);
                 showAlert(`Líderes recarregados: ${lideres.length} encontrados`, 'success');
                 return lideres;
             } catch (error) {
@@ -2223,7 +2264,7 @@
             // Número de filhos
             document.getElementById('num_filhos').addEventListener('change', atualizarCamposFilhos);
             
-            // Upload de foto - VERSÃO ATUALIZADA
+            // Upload de foto
             fotoInput.addEventListener('change', handleFotoUpload);
             
             // Logout
@@ -2267,6 +2308,7 @@
             const estado = document.getElementById('estado').value;
             const complemento = document.getElementById('complemento').value;
             const tamanho_fardamento = document.getElementById('tamanho_fardamento').value;
+            const tamanho_calcado = document.getElementById('tamanho_calcado').value;
             
             // Obter seções selecionadas para líder
             const secoesLider = Array.from(selectedSecoes);
@@ -2320,6 +2362,8 @@
             html += '<div class="preview-item"><span class="preview-label">Sexo:</span><span class="preview-value">' + (sexo === 'M' ? 'Masculino' : sexo === 'F' ? 'Feminino' : sexo === 'O' ? 'Outro' : 'Não informado') + '</span></div>';
             html += '<div class="preview-item"><span class="preview-label">RG:</span><span class="preview-value">' + (rg || 'Não informado') + '</span></div>';
             html += '<div class="preview-item"><span class="preview-label">PIS:</span><span class="preview-value">' + (pis || 'Não informado') + '</span></div>';
+            html += '<div class="preview-item"><span class="preview-label">Tamanho Fardamento:</span><span class="preview-value">' + (tamanho_fardamento || 'Não informado') + '</span></div>';
+            html += '<div class="preview-item"><span class="preview-label">Tamanho Calçado:</span><span class="preview-value">' + (tamanho_calcado || 'Não informado') + '</span></div>';
             html += '</div>';
             
             // Seção de Dados Profissionais
@@ -2380,16 +2424,10 @@
             }
             html += '</div>';
             
-            // Seção de Fardamento
-            if (tamanho_fardamento) {
-                html += '<div class="preview-section-title">Fardamento</div>';
-                html += '<div class="preview-item"><span class="preview-label">Tamanho:</span><span class="preview-value">' + tamanho_fardamento + '</span></div>';
-            }
-            
             previewContent.innerHTML = html;
         }
 
-        // Função para manipular upload de foto - VERSÃO ATUALIZADA E CORRIGIDA
+        // Função para manipular upload de foto
         function handleFotoUpload(event) {
             const file = event.target.files[0];
             if (!file) {
@@ -2535,7 +2573,7 @@
             }
         }
 
-        // Função para consultar CPF (mantida no backend)
+        // Função para consultar CPF
         async function consultarCPF() {
             const cpf = formatarCPF(document.getElementById('cpf').value);
             
@@ -2638,7 +2676,7 @@
             }
         }
 
-        // Função para salvar funcionário - VERSÃO ATUALIZADA COM FOTO
+        // Função para salvar funcionário - VERSÃO ATUALIZADA COM ID DO LÍDER
         async function salvarFuncionario() {
             const btn = document.getElementById('salvar-funcionario');
             const originalText = btn.innerHTML;
@@ -2651,6 +2689,12 @@
                 
                 // Obter seções selecionadas para líder
                 const secoesLider = Array.from(selectedSecoes);
+                
+                // Obter o ID do líder selecionado
+                const liderSelect = document.getElementById('lider');
+                const liderId = liderSelect.value; // Este é o ID do líder
+                
+                console.log('📋 Líder selecionado (ID):', liderId);
                 
                 // Coletar e formatar dados do formulário
                 const funcionarioData = {
@@ -2669,7 +2713,7 @@
                     ADMISSAO: formatarData(document.getElementById('admissao').value),
                     SALARIO: formatarSalario(document.getElementById('salario').value),
                     SECOES_LIDER: document.getElementById('is_lider').checked ? secoesLider.join(', ') : null,
-                    LIDER_RESPONSAVEL: document.getElementById('lider').value,
+                    LIDER_RESPONSAVEL: liderId, // ENVIAR APENAS O ID
                     IS_LIDER: document.getElementById('is_lider').checked,
                     IS_PAI_MAE: document.getElementById('is_pai_mae').checked,
                     NUM_FILHOS: parseInt(document.getElementById('num_filhos').value) || 0,
@@ -2680,16 +2724,18 @@
                     END_CIDADE: document.getElementById('cidade').value.trim(),
                     END_ESTADO: document.getElementById('estado').value.trim(),
                     END_COMPLEMENTO: document.getElementById('complemento').value.trim(),
-                    TAMANHO_FARDAMENTO: document.getElementById('tamanho_fardamento').value
+                    TAMANHO_FARDAMENTO: document.getElementById('tamanho_fardamento').value,
+                    TAMANHO_CALCADO: document.getElementById('tamanho_calcado').value
                 };
                 
                 console.log('📋 Dados do funcionário coletados:', {
                     nome: funcionarioData.NOME,
                     cpf: funcionarioData.CPF,
                     empresa: funcionarioData.EMPRESA,
-                    temFoto: !!fotoPreviewUrl,
-                    isLider: funcionarioData.IS_LIDER,
-                    secoesLider: funcionarioData.SECOES_LIDER
+                    lider_responsavel: funcionarioData.LIDER_RESPONSAVEL,
+                    tamanho_fardamento: funcionarioData.TAMANHO_FARDAMENTO,
+                    tamanho_calcado: funcionarioData.TAMANHO_CALCADO,
+                    temFoto: !!fotoPreviewUrl
                 });
                 
                 // Adicionar dados dos filhos
