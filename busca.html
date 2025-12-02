@@ -1167,6 +1167,7 @@
                                             <th>Função</th>
                                             <th>Setor</th>
                                             <th>Admissão</th>
+                                            <th>Calçado</th>
                                             <th>Status</th>
                                             <th>Ações</th>
                                         </tr>
@@ -1174,7 +1175,7 @@
                                     <tbody id="tabela-corpo">
                                         <!-- Os dados serão preenchidos via JavaScript -->
                                         <tr>
-                                            <td colspan="9" style="text-align: center; padding: 30px; color: var(--text-light);">
+                                            <td colspan="10" style="text-align: center; padding: 30px; color: var(--text-light);">
                                                 <i class="fas fa-search" style="font-size: 48px; margin-bottom: 15px;"></i>
                                                 <h3>Nenhum funcionário encontrado</h3>
                                                 <p>Utilize os filtros acima para buscar funcionários</p>
@@ -1749,7 +1750,7 @@
             if (!funcionarios || funcionarios.length === 0) {
                 tabelaCorpo.innerHTML = `
                     <tr>
-                        <td colspan="9" style="text-align: center; padding: 30px; color: var(--text-light);">
+                        <td colspan="10" style="text-align: center; padding: 30px; color: var(--text-light);">
                             <i class="fas fa-search" style="font-size: 48px; margin-bottom: 15px;"></i>
                             <h3>Nenhum funcionário encontrado</h3>
                             <p>Nenhum resultado corresponde aos seus critérios de busca</p>
@@ -1775,6 +1776,7 @@
                 const admissao = funcionario.data_admissao;
                 const isLider = funcionario.is_lider;
                 const isPaiMae = funcionario.is_pai_mae;
+                const tamanhoCalcado = funcionario.tamanho_calcado || 'N/A'; // NOVO CAMPO
                 
                 // Formatar data de admissão
                 const dataAdmissao = admissao ? 
@@ -1800,6 +1802,7 @@
                     <td>${funcao}</td>
                     <td>${setor}</td>
                     <td>${dataAdmissao}</td>
+                    <td>${tamanhoCalcado}</td>
                     <td>${statusHTML}</td>
                     <td>
                         <div class="action-buttons">
@@ -1856,6 +1859,22 @@
                 }
                 
                 funcionarioSelecionado = data;
+                
+                // Buscar informações do líder se existir
+                let liderInfo = null;
+                if (data.lider_responsavel) {
+                    const { data: liderData } = await window.supabase
+                        .from('funcionarios')
+                        .select('id, nome, matricula, funcao, setor, secoes_lider')
+                        .eq('id', data.lider_responsavel)
+                        .single();
+                    
+                    liderInfo = liderData;
+                }
+                
+                // Adicionar informações do líder ao objeto do funcionário
+                data.lider_info = liderInfo;
+                
                 preencherModalFuncionario(data);
                 modalFuncionario.style.display = 'block';
                 
@@ -1906,9 +1925,15 @@
             const liderResponsavel = funcionario.lider_responsavel || 'N/A';
             const numFilhos = funcionario.num_filhos || 0;
             const tamanhoFardamento = funcionario.tamanho_fardamento || 'N/A';
+            const tamanhoCalcado = funcionario.tamanho_calcado || 'N/A'; // NOVO CAMPO
             const foto = funcionario.foto_url;
             const isLider = funcionario.is_lider;
             const isPaiMae = funcionario.is_pai_mae;
+            
+            // Nome do líder (se existir)
+            const nomeLider = funcionario.lider_info ? 
+                `${funcionario.lider_info.nome} (Matrícula: ${funcionario.lider_info.matricula})` : 
+                'N/A';
             
             // Formatar datas
             const nascimento = funcionario.data_nascimento;
@@ -2055,7 +2080,7 @@
                         
                         <div class="detail-group">
                             <div class="detail-label"><i class="fas fa-user-friends"></i> Líder Responsável</div>
-                            <div class="detail-value">${liderResponsavel}</div>
+                            <div class="detail-value">${nomeLider}</div>
                         </div>
                         
                         <div class="detail-group">
@@ -2066,6 +2091,11 @@
                         <div class="detail-group">
                             <div class="detail-label"><i class="fas fa-tshirt"></i> Tamanho do Fardamento</div>
                             <div class="detail-value">${tamanhoFardamento}</div>
+                        </div>
+                        
+                        <div class="detail-group">
+                            <div class="detail-label"><i class="fas fa-shoe-prints"></i> Tamanho do Calçado</div>
+                            <div class="detail-value">${tamanhoCalcado}</div>
                         </div>
                     </div>
                 </div>
@@ -2235,7 +2265,7 @@
                         </div>
                         
                         <div class="detail-group">
-                            <label class="detail-label"><i class="fas fa-user-friends"></i> Líder Responsável</label>
+                            <label class="detail-label"><i class="fas fa-user-friends"></i> Líder Responsável (ID)</label>
                             <input type="text" class="detail-input" id="edit-lider_responsavel" value="${funcionario.lider_responsavel || ''}">
                         </div>
                         
@@ -2247,6 +2277,11 @@
                         <div class="detail-group">
                             <label class="detail-label"><i class="fas fa-tshirt"></i> Tamanho do Fardamento</label>
                             <input type="text" class="detail-input" id="edit-tamanho_fardamento" value="${funcionario.tamanho_fardamento || ''}">
+                        </div>
+                        
+                        <div class="detail-group">
+                            <label class="detail-label"><i class="fas fa-shoe-prints"></i> Tamanho do Calçado</label>
+                            <input type="text" class="detail-input" id="edit-tamanho_calcado" value="${funcionario.tamanho_calcado || ''}">
                         </div>
                         
                         <div class="detail-group">
@@ -2529,6 +2564,7 @@
                     estado: document.getElementById('edit-estado').value.trim(),
                     complemento: document.getElementById('edit-complemento').value.trim(),
                     tamanho_fardamento: document.getElementById('edit-tamanho_fardamento').value.trim(),
+                    tamanho_calcado: document.getElementById('edit-tamanho_calcado').value.trim(), // NOVO CAMPO
                     foto_url: document.getElementById('edit-foto_url').value.trim(),
                     is_lider: document.getElementById('edit-is_lider').checked,
                     is_pai_mae: document.getElementById('edit-is_pai_mae').checked,
@@ -2583,6 +2619,22 @@
                 }
                 
                 funcionarioSelecionado = data;
+                
+                // Buscar informações do líder se existir
+                let liderInfo = null;
+                if (data.lider_responsavel) {
+                    const { data: liderData } = await window.supabase
+                        .from('funcionarios')
+                        .select('id, nome, matricula, funcao, setor, secoes_lider')
+                        .eq('id', data.lider_responsavel)
+                        .single();
+                    
+                    liderInfo = liderData;
+                }
+                
+                // Adicionar informações do líder ao objeto do funcionário
+                data.lider_info = liderInfo;
+                
                 mostrarPreviewImpressao(data);
                 modalImpressao.style.display = 'block';
                 
@@ -2609,9 +2661,15 @@
             const liderResponsavel = funcionario.lider_responsavel || 'N/A';
             const numFilhos = funcionario.num_filhos || 0;
             const tamanhoFardamento = funcionario.tamanho_fardamento || 'N/A';
+            const tamanhoCalcado = funcionario.tamanho_calcado || 'N/A'; // NOVO CAMPO
             const foto = funcionario.foto_url;
             const isLider = funcionario.is_lider;
             const isPaiMae = funcionario.is_pai_mae;
+            
+            // Nome do líder (se existir)
+            const nomeLider = funcionario.lider_info ? 
+                `${funcionario.lider_info.nome} (Matrícula: ${funcionario.lider_info.matricula})` : 
+                'N/A';
             
             // Formatar datas
             const nascimento = funcionario.data_nascimento;
@@ -2733,7 +2791,7 @@
                         </div>
                         <div class="print-row">
                             <div class="print-label">Líder Responsável:</div>
-                            <div class="print-value">${liderResponsavel}</div>
+                            <div class="print-value">${nomeLider}</div>
                         </div>
                         <div class="print-row">
                             <div class="print-label">Status:</div>
@@ -2741,6 +2799,14 @@
                                 ${isLider ? '<span class="print-badge" style="background-color: #ff9800; color: white;">LÍDER</span>' : ''}
                                 ${isPaiMae ? '<span class="print-badge" style="background-color: #4caf50; color: white;">PAI/MÃE</span>' : ''}
                             </div>
+                        </div>
+                        <div class="print-row">
+                            <div class="print-label">Tamanho do Fardamento:</div>
+                            <div class="print-value">${tamanhoFardamento}</div>
+                        </div>
+                        <div class="print-row">
+                            <div class="print-label">Tamanho do Calçado:</div>
+                            <div class="print-value">${tamanhoCalcado}</div>
                         </div>
                     </div>
                     
@@ -2787,18 +2853,6 @@
                         `).join('')}
                     </div>
                     ` : ''}
-                    
-                    <div class="print-section">
-                        <h3><i class="fas fa-info-circle"></i> INFORMAÇÕES ADICIONAIS</h3>
-                        <div class="print-row">
-                            <div class="print-label">Número de Filhos:</div>
-                            <div class="print-value">${numFilhos}</div>
-                        </div>
-                        <div class="print-row">
-                            <div class="print-label">Tamanho do Fardamento:</div>
-                            <div class="print-value">${tamanhoFardamento}</div>
-                        </div>
-                    </div>
                     
                     <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd;">
                         <div style="display: flex; justify-content: space-between;">
@@ -3027,6 +3081,7 @@
                     const estado = func.estado || '';
                     const complemento = func.complemento || '';
                     const tamanhoFardamento = func.tamanho_fardamento || '';
+                    const tamanhoCalcado = func.tamanho_calcado || ''; // NOVO CAMPO
                     
                     // Preparar dados dos filhos
                     const filhos = [];
@@ -3072,7 +3127,8 @@
                         'Cidade': cidade,
                         'Estado': estado,
                         'Complemento': complemento,
-                        'Tamanho do Fardamento': tamanhoFardamento
+                        'Tamanho do Fardamento': tamanhoFardamento,
+                        'Tamanho do Calçado': tamanhoCalcado // NOVO CAMPO
                     };
                 });
                 
@@ -3116,7 +3172,7 @@
                 
                 // Cabeçalho da tabela
                 const headers = [
-                    ['Nome', 'CPF', 'Empresa', 'Função', 'Setor', 'Bairro', 'Admissão', 'Status']
+                    ['Nome', 'CPF', 'Empresa', 'Função', 'Setor', 'Bairro', 'Calçado', 'Admissão', 'Status']
                 ];
                 
                 // Dados da tabela
@@ -3127,6 +3183,7 @@
                     const funcao = func.funcao || 'N/A';
                     const setor = func.setor || 'N/A';
                     const bairro = func.bairro || 'N/A';
+                    const tamanhoCalcado = func.tamanho_calcado || 'N/A'; // NOVO CAMPO
                     const admissao = func.data_admissao ? 
                         new Date(func.data_admissao).toLocaleDateString('pt-BR') : 'N/A';
                     
@@ -3135,7 +3192,7 @@
                     if (func.is_pai_mae) status += 'Pai/Mãe';
                     if (!func.is_lider && !func.is_pai_mae) status = 'Ativo';
                     
-                    return [nome, cpf, empresa, funcao, setor, bairro, admissao, status];
+                    return [nome, cpf, empresa, funcao, setor, bairro, tamanhoCalcado, admissao, status];
                 });
                 
                 // Criar tabela
